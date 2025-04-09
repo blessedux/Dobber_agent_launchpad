@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TransitionLink } from "@/components/ui/transition-link"
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false)
@@ -30,16 +31,16 @@ export function MobileMenu() {
       </SheetTrigger>
       <SheetContent side="left">
         <div className="flex items-center gap-2 mb-8">
-          <Link href="/" onClick={() => setOpen(false)}>
+          <TransitionLink href="/" onClick={() => setOpen(false)}>
             <div className="flex items-center gap-2">
               <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
               <span className="text-xl font-semibold tracking-tight">DOBBER</span>
             </div>
-          </Link>
+          </TransitionLink>
         </div>
         <nav className="flex flex-col gap-4">
           {navItems.map((item) => (
-            <Link
+            <TransitionLink
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
@@ -52,26 +53,26 @@ export function MobileMenu() {
             >
               <span className="mr-2">{item.icon}</span>
               {item.name}
-            </Link>
+            </TransitionLink>
           ))}
 
           <div className="border-t border-slate-200 dark:border-slate-700 my-4 pt-4">
-            <Link href="/launch-agent" onClick={() => setOpen(false)}>
+            <TransitionLink href="/launch-agent" onClick={() => setOpen(false)}>
               <Button className="w-full bg-violet-600 hover:bg-violet-700">
                 <Rocket className="w-4 h-4 mr-2" />
                 Launch Agent
               </Button>
-            </Link>
+            </TransitionLink>
           </div>
 
-          <Link
+          <TransitionLink
             href="/help"
             onClick={() => setOpen(false)}
             className="flex items-center text-sm font-medium transition-colors px-3 py-2 rounded-md text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
           >
             <HelpCircle className="w-5 h-5 mr-2" />
             Help & Support
-          </Link>
+          </TransitionLink>
         </nav>
       </SheetContent>
     </Sheet>

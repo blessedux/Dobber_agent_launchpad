@@ -67,3 +67,38 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Page transition styles */
+.page-wrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.page-transition-container {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  will-change: filter, opacity;
+  z-index: 20; /* Above aurora but below fixed elements */
+}
+
+/* Allow scrolling but prevent horizontal overflow */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Ensure AuroraBackground remains visible during transitions */
+.aurora-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}

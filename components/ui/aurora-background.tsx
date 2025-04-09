@@ -5,20 +5,22 @@ import React, { ReactNode } from "react";
 interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
   children: ReactNode;
   showRadialGradient?: boolean;
+  fixedInViewport?: boolean;
 }
 
 export const AuroraBackground = ({
   className,
   children,
   showRadialGradient = true,
+  fixedInViewport = true,
   ...props
 }: AuroraBackgroundProps) => {
   return (
-    <div className="relative min-h-screen w-full">
+    <div className={cn("relative min-h-screen w-full", className)}>
       <div
         className={cn(
-          "fixed inset-0 z-0 bg-zinc-50 dark:bg-zinc-900 transition-bg",
-          className
+          fixedInViewport ? "aurora-fixed" : "absolute inset-0 z-0",
+          "bg-zinc-50 dark:bg-zinc-900 transition-bg"
         )}
         {...props}
       >

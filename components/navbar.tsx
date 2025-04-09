@@ -7,6 +7,7 @@ import { MobileMenu } from "@/components/mobile-menu"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TransitionLink } from "@/components/ui/transition-link"
 
 const navItems = [
   { name: "Home", href: "/dashboard", icon: <Home className="w-5 h-5" /> },
@@ -23,17 +24,17 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
       <div className="container flex h-16 items-center px-4 sm:px-6">
         <div className="flex items-center gap-2 mr-6">
-          <Link href="/">
+          <TransitionLink href="/">
             <div className="flex items-center gap-2">
               <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
               <span className="text-xl font-semibold tracking-tight hidden md:inline-block">DOBBER</span>
             </div>
-          </Link>
+          </TransitionLink>
         </div>
 
         <nav className="hidden md:flex items-center gap-4 flex-1">
           {navItems.map((item) => (
-            <Link
+            <TransitionLink
               key={item.href}
               href={item.href}
               className={cn(
@@ -45,22 +46,22 @@ export default function Navbar() {
             >
               <span className="mr-2">{item.icon}</span>
               {item.name}
-            </Link>
+            </TransitionLink>
           ))}
         </nav>
 
         <div className="flex items-center ml-auto gap-2">
-          <Link href="/launch-agent">
+          <TransitionLink href="/launch-agent">
             <Button className="bg-violet-600 hover:bg-violet-700 hidden sm:flex">
               <Rocket className="w-4 h-4 mr-2" />
               Launch Agent
             </Button>
-          </Link>
-          <Link href="/help">
+          </TransitionLink>
+          <TransitionLink href="/help">
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <HelpCircle className="h-5 w-5" />
             </Button>
-          </Link>
+          </TransitionLink>
           <ModeToggle />
           <MobileMenu />
         </div>

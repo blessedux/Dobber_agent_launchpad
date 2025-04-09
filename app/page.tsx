@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
 import { motion } from "framer-motion"
 import { AuroraBackground } from "@/components/ui/aurora-background"
+import { TransitionLink } from "@/components/ui/transition-link"
 
 export default function LandingPage() {
   return (
@@ -43,14 +43,14 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9, duration: 0.6 }}
             >
-              <Link href="/dashboard">
+              <TransitionLink href="/dashboard">
                 <Button
                   variant="outline"
                   className="border-violet-300 dark:border-violet-700 text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 px-6 backdrop-blur-sm"
                 >
                   Get Started
                 </Button>
-              </Link>
+              </TransitionLink>
             </motion.div>
           </motion.div>
         </div>
