@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { MobileMenu } from "@/components/mobile-menu"
@@ -61,7 +62,13 @@ export default function Navbar() {
           
           {/* Virtuals Logo */}
           <div className="flex items-center ml-4">
-            <span className="text-md font-semibold tracking-tight hidden md:inline-block text-violet-600 dark:text-violet-400">VIRTUALS</span>
+            <Image 
+              src="/virtuals_logo.svg" 
+              alt="Virtuals Logo" 
+              width={120} 
+              height={32} 
+              className="hidden md:block" 
+            />
           </div>
           
           <MobileMenu />
