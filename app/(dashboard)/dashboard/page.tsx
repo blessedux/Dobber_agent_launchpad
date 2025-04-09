@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,6 +9,7 @@ import DeviceHealthPanel from "@/components/device-health-panel"
 import EmptyDashboard from "@/components/empty-dashboard"
 import LoadingSpinner from "@/components/loading-spinner"
 import { Plus, ArrowRight } from "lucide-react"
+import { TransitionLink } from "@/components/ui/transition-link"
 
 // This is a mock to simulate a new user with no agents
 const userHasAgents = true
@@ -23,12 +23,12 @@ export default function Dashboard() {
           <p className="text-slate-600 dark:text-slate-300 mt-1">Your autonomous agent ecosystem at a glance</p>
         </div>
 
-        <Link href="/launch-agent">
+        <TransitionLink href="/launch-agent">
           <Button className="bg-violet-600 hover:bg-violet-700">
             <Plus className="w-4 h-4 mr-2" />
             Launch New Agent
           </Button>
-        </Link>
+        </TransitionLink>
       </div>
 
       {!userHasAgents ? (
@@ -121,38 +121,38 @@ export default function Dashboard() {
             <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Resources</h2>
-                <Link href="/help">
+                <TransitionLink href="/help">
                   <Button variant="ghost" size="sm" className="flex items-center gap-1">
                     View all
                     <ArrowRight className="w-3 h-3" />
                   </Button>
-                </Link>
+                </TransitionLink>
               </div>
               <div className="space-y-3">
-                <Link href="/help/getting-started">
+                <TransitionLink href="/help/getting-started">
                   <div className="p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
                     <h3 className="font-medium mb-1">Getting Started Guide</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Learn the basics of managing autonomous agents
                     </p>
                   </div>
-                </Link>
-                <Link href="/help/optimization">
+                </TransitionLink>
+                <TransitionLink href="/help/optimization">
                   <div className="p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
                     <h3 className="font-medium mb-1">Optimization Strategies</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Maximize revenue from your device fleet
                     </p>
                   </div>
-                </Link>
-                <Link href="/help/troubleshooting">
+                </TransitionLink>
+                <TransitionLink href="/help/troubleshooting">
                   <div className="p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
                     <h3 className="font-medium mb-1">Troubleshooting</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Solutions for common device and agent issues
                     </p>
                   </div>
-                </Link>
+                </TransitionLink>
               </div>
             </Card>
           </div>
@@ -160,4 +160,4 @@ export default function Dashboard() {
       )}
     </main>
   )
-}
+} 

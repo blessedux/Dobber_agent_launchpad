@@ -57,12 +57,12 @@ export function MobileMenu() {
           ))}
 
           <div className="border-t border-slate-200 dark:border-slate-700 my-4 pt-4">
-            <TransitionLink href="/launch-agent" onClick={() => setOpen(false)}>
-              <Button className="w-full bg-violet-600 hover:bg-violet-700">
-                <Rocket className="w-4 h-4 mr-2" />
-                Launch Agent
-              </Button>
-            </TransitionLink>
+            <Button 
+              className="w-full bg-violet-600 hover:bg-violet-700"
+              onClick={() => setOpen(false)}
+            >
+              Connect
+            </Button>
           </div>
 
           <TransitionLink

@@ -129,4 +129,4 @@ function EmptyAgentsState() {
       </Card>
     </motion.div>
   )
-}
+} 

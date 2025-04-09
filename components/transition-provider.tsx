@@ -33,7 +33,7 @@ export const TransitionProvider = ({ children }: { children: React.ReactNode }) 
       // End the transition after animation completes
       const timer = setTimeout(() => {
         setIsTransitioning(false);
-      }, 1200); // Slightly longer than our animation to ensure it completes
+      }, 1500); // Increased time to ensure exit animations complete
       
       return () => clearTimeout(timer);
     }
@@ -41,28 +41,27 @@ export const TransitionProvider = ({ children }: { children: React.ReactNode }) 
 
   return (
     <TransitionContext.Provider value={{ isTransitioning }}>
-      <div className="page-wrapper">
+      <div className="page-wrapper relative min-h-screen">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, filter: "blur(20px)" }}
+            initial={{ opacity: 0 }}
             animate={{ 
-              opacity: 1, 
-              filter: "blur(0px)",
+              opacity: 1,
               transition: { 
-                duration: 1, 
+                duration: 0.8, 
                 ease: [0.22, 1, 0.36, 1],
+                delay: 0.5, // Delay entrance to allow exit animations to complete
               }
             }}
             exit={{ 
-              opacity: 0, 
-              filter: "blur(20px)",
+              opacity: 0,
               transition: { 
-                duration: 1, 
+                duration: 0.5, 
                 ease: [0.22, 1, 0.36, 1],
               }
             }}
-            className="page-transition-container"
+            className="page-transition-container relative z-10"
           >
             {children}
           </motion.div>

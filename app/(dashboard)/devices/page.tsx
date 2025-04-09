@@ -153,4 +153,4 @@ function EmptyDevicesState() {
       </Card>
     </motion.div>
   )
-}
+} 

@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { MobileMenu } from "@/components/mobile-menu"
-import { ModeToggle } from "@/components/mode-toggle"
 import { Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TransitionLink } from "@/components/ui/transition-link"
@@ -21,7 +20,7 @@ export default function Navbar() {
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 dark:border-slate-700/50 bg-transparent backdrop-blur-sm">
       <div className="container flex h-16 items-center px-4 sm:px-6">
         <div className="flex items-center gap-2 mr-6">
           <TransitionLink href="/">
@@ -51,18 +50,20 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center ml-auto gap-2">
-          <TransitionLink href="/launch-agent">
-            <Button className="bg-violet-600 hover:bg-violet-700 hidden sm:flex">
-              <Rocket className="w-4 h-4 mr-2" />
-              Launch Agent
-            </Button>
-          </TransitionLink>
+          <Button className="bg-violet-600 hover:bg-violet-700 hidden sm:flex">
+            Connect
+          </Button>
           <TransitionLink href="/help">
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <HelpCircle className="h-5 w-5" />
             </Button>
           </TransitionLink>
-          <ModeToggle />
+          
+          {/* Virtuals Logo */}
+          <div className="flex items-center ml-4">
+            <span className="text-md font-semibold tracking-tight hidden md:inline-block text-violet-600 dark:text-violet-400">VIRTUALS</span>
+          </div>
+          
           <MobileMenu />
         </div>
       </div>

@@ -19,7 +19,7 @@ export const AuroraBackground = ({
     <div className={cn("relative min-h-screen w-full", className)}>
       <div
         className={cn(
-          fixedInViewport ? "aurora-fixed" : "absolute inset-0 z-0",
+          fixedInViewport ? "fixed inset-0 z-0" : "absolute inset-0 z-0",
           "bg-zinc-50 dark:bg-zinc-900 transition-bg"
         )}
         {...props}

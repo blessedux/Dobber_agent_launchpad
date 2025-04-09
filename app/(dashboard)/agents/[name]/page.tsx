@@ -26,7 +26,7 @@ export default function AgentDetailPage({ params }: { params: { name: string } }
   return (
     <main className="container px-4 py-8 md:py-12">
       <div className="mb-8">
-        <Link href="/">
+        <Link href="/dashboard">
           <Button variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
@@ -157,4 +157,4 @@ export default function AgentDetailPage({ params }: { params: { name: string } }
       </Tabs>
     </main>
   )
-}
+} 
