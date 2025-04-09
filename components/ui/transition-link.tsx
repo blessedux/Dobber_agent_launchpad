@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useTransition } from "@/components/transition-provider";
 
@@ -16,13 +16,14 @@ type TransitionLinkProps = {
   locale?: string | false;
 };
 
-export const TransitionLink: React.FC<TransitionLinkProps> = ({
+// Inner component that uses the hooks
+function TransitionLinkInner({
   href,
   className,
   children,
   onClick,
   ...props
-}) => {
+}: TransitionLinkProps) {
   const { isTransitioning } = useTransition();
 
   const handleClick = (e: React.MouseEvent) => {
@@ -42,5 +43,14 @@ export const TransitionLink: React.FC<TransitionLinkProps> = ({
     >
       {children}
     </Link>
+  );
+}
+
+// Exported component with Suspense boundary
+export const TransitionLink: React.FC<TransitionLinkProps> = (props) => {
+  return (
+    <Suspense fallback={<span className={props.className}>{props.children}</span>}>
+      <TransitionLinkInner {...props} />
+    </Suspense>
   );
 }; 

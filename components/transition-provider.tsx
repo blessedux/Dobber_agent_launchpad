@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,7 +14,8 @@ const TransitionContext = createContext<TransitionContextProps>({
 
 export const useTransition = () => useContext(TransitionContext);
 
-export const TransitionProvider = ({ children }: { children: React.ReactNode }) => {
+// Separate component to handle navigation hooks
+function TransitionHandler({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -68,5 +69,15 @@ export const TransitionProvider = ({ children }: { children: React.ReactNode }) 
         </AnimatePresence>
       </div>
     </TransitionContext.Provider>
+  );
+}
+
+export const TransitionProvider = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Suspense fallback={<div>Loading transitions...</div>}>
+      <TransitionHandler>
+        {children}
+      </TransitionHandler>
+    </Suspense>
   );
 }; 
