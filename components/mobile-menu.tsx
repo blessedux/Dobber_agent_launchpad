@@ -30,8 +30,12 @@ export function MobileMenu() {
       </SheetTrigger>
       <SheetContent side="left">
         <div className="flex items-center gap-2 mb-8">
-          <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-          <span className="text-xl font-semibold tracking-tight">DOBBER</span>
+          <Link href="/" onClick={() => setOpen(false)}>
+            <div className="flex items-center gap-2">
+              <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <span className="text-xl font-semibold tracking-tight">DOBBER</span>
+            </div>
+          </Link>
         </div>
         <nav className="flex flex-col gap-4">
           {navItems.map((item) => (

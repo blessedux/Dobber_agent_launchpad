@@ -17,16 +17,16 @@ interface AgentCardProps {
 
 export default function AgentCard({ name, deviceType, status, revenue, actions, alert }: AgentCardProps) {
   return (
-    <Card className="overflow-hidden">
-      <div className="bg-gradient-to-br from-violet-50 to-slate-50 dark:from-slate-800 dark:to-violet-950/30 border-b border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between">
+    <Card className="overflow-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
+      <div className="bg-gradient-to-br from-violet-50/95 to-slate-50/95 dark:from-slate-800/95 dark:to-violet-950/50 border-b border-slate-200/80 dark:border-slate-700/80 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
             className={`rounded-full p-2 ${
               status === "online"
-                ? "bg-emerald-100 dark:bg-emerald-900/40"
+                ? "bg-emerald-100/80 dark:bg-emerald-900/40"
                 : status === "warning"
-                  ? "bg-amber-100 dark:bg-amber-900/40"
-                  : "bg-slate-100 dark:bg-slate-800"
+                  ? "bg-amber-100/80 dark:bg-amber-900/40"
+                  : "bg-slate-100/80 dark:bg-slate-800/80"
             }`}
           >
             {getDeviceIcon(deviceType)}
@@ -38,10 +38,10 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
                 variant="outline"
                 className={`text-xs ${
                   status === "online"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400"
+                    ? "border-emerald-200/70 bg-emerald-50/70 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800/70 dark:text-emerald-400"
                     : status === "warning"
-                      ? "border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400"
-                      : "border-red-200 bg-red-50 text-red-700 dark:bg-red-950/30 dark:border-red-800 dark:text-red-400"
+                      ? "border-amber-200/70 bg-amber-50/70 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800/70 dark:text-amber-400"
+                      : "border-red-200/70 bg-red-50/70 text-red-700 dark:bg-red-950/30 dark:border-red-800/70 dark:text-red-400"
                 }`}
               >
                 <span className="flex items-center gap-1">
@@ -61,7 +61,7 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
 
       <div className="p-4">
         {alert && (
-          <div className="flex items-center gap-2 p-2 mb-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm rounded-md border border-amber-200 dark:border-amber-900/50">
+          <div className="flex items-center gap-2 p-2 mb-3 bg-amber-50/70 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm rounded-md border border-amber-200/70 dark:border-amber-900/50">
             <AlertTriangle className="w-4 h-4" />
             <p>{alert}</p>
           </div>
@@ -85,7 +85,7 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
         </div>
 
         <Link href={`/agents/${name.toLowerCase()}`}>
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-100/70 dark:hover:bg-slate-800/70">
             <span>Manage Agent</span>
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>

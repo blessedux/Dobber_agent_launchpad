@@ -37,7 +37,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
             <Tabs defaultValue="agents" className="w-full">
-              <TabsList className="w-full mb-2">
+              <TabsList className="w-full mb-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
                 <TabsTrigger value="agents" className="flex-1">
                   My Agents
                 </TabsTrigger>
@@ -106,19 +106,19 @@ export default function Dashboard() {
               </TabsContent>
             </Tabs>
 
-            <Card className="p-6">
+            <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
               <h2 className="text-xl font-semibold mb-4">Recent Agent Activity</h2>
               <DecisionLogViewer />
             </Card>
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6">
+            <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
               <h2 className="text-xl font-semibold mb-4">Total Earnings</h2>
               <EarningsWidget />
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Resources</h2>
                 <Link href="/help">
@@ -130,7 +130,7 @@ export default function Dashboard() {
               </div>
               <div className="space-y-3">
                 <Link href="/help/getting-started">
-                  <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
                     <h3 className="font-medium mb-1">Getting Started Guide</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Learn the basics of managing autonomous agents
@@ -138,7 +138,7 @@ export default function Dashboard() {
                   </div>
                 </Link>
                 <Link href="/help/optimization">
-                  <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
                     <h3 className="font-medium mb-1">Optimization Strategies</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Maximize revenue from your device fleet
@@ -146,7 +146,7 @@ export default function Dashboard() {
                   </div>
                 </Link>
                 <Link href="/help/troubleshooting">
-                  <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="p-3 rounded-lg border border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
                     <h3 className="font-medium mb-1">Troubleshooting</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-300">
                       Solutions for common device and agent issues

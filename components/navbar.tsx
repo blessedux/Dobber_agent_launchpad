@@ -23,8 +23,12 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
       <div className="container flex h-16 items-center px-4 sm:px-6">
         <div className="flex items-center gap-2 mr-6">
-          <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-          <span className="text-xl font-semibold tracking-tight hidden md:inline-block">DOBBER</span>
+          <Link href="/">
+            <div className="flex items-center gap-2">
+              <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <span className="text-xl font-semibold tracking-tight hidden md:inline-block">DOBBER</span>
+            </div>
+          </Link>
         </div>
 
         <nav className="hidden md:flex items-center gap-4 flex-1">
