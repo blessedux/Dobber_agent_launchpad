@@ -37,15 +37,14 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
     <BasePrivyProvider
       appId={privyAppId || ""}
       config={{
-        loginMethods: ["wallet", "email", "google", "twitter"],
+        loginMethods: ["wallet"],
         appearance: {
           theme: "dark",
           accentColor: "#8b5cf6", // violet-500
           logo: "/virtuals_logo.svg",
-        },
-        embeddedWallets: {
-          createOnLogin: "users-without-wallets",
-        },
+          showWalletLoginFirst: true,
+          walletList: ["metamask", "coinbase_wallet", "wallet_connect"]
+        }
       }}
     >
       <PrivyAuthWatcher 
@@ -83,7 +82,11 @@ function PrivyAuthWatcher({
       setUser(user);
       
       if (authenticated && user) {
-        onSuccess();
+        // Check if user has a wallet before redirecting
+        if (user.wallet) {
+          console.log("User connected with wallet:", user.wallet.address);
+          onSuccess();
+        }
       }
     }
   }, [ready, authenticated, user, setIsLoading, setIsAuthenticated, setUser, onSuccess]);
