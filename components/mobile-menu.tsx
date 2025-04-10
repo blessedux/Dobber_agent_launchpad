@@ -5,13 +5,15 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle } from "lucide-react"
+import { Menu, Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TransitionLink } from "@/components/ui/transition-link"
+import { usePrivy as useBasePrivy } from "@privy-io/react-auth"
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const { login, logout, authenticated, user } = useBasePrivy()
 
   const navItems = [
     { name: "Home", href: "/dashboard", icon: <Home className="w-5 h-5" /> },
@@ -20,6 +22,16 @@ export function MobileMenu() {
     { name: "Profit Pools", href: "/profit-pools", icon: <BarChart3 className="w-5 h-5" /> },
     { name: "Settings", href: "/settings", icon: <Settings className="w-5 h-5" /> },
   ]
+
+  const handleLogin = () => {
+    login();
+    setOpen(false);
+  }
+
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -57,12 +69,29 @@ export function MobileMenu() {
           ))}
 
           <div className="border-t border-slate-200 dark:border-slate-700 my-4 pt-4">
-            <Button 
-              className="w-full bg-violet-600 hover:bg-violet-700"
-              onClick={() => setOpen(false)}
-            >
-              Connect
-            </Button>
+            {authenticated ? (
+              <>
+                {user?.wallet && (
+                  <div className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
+                    Connected: {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
+                  </div>
+                )}
+                <Button 
+                  className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Disconnect
+                </Button>
+              </>
+            ) : (
+              <Button 
+                className="w-full bg-violet-600 hover:bg-violet-700"
+                onClick={handleLogin}
+              >
+                Connect
+              </Button>
+            )}
           </div>
 
           <TransitionLink

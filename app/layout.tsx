@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TransitionProvider } from "@/components/transition-provider"
 import { AuroraBackground } from "@/components/ui/aurora-background"
+import { PrivyProvider } from "@/components/privy-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -17,11 +18,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.className)}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuroraBackground fixedInViewport={true}>
-            <TransitionProvider>
-              {children}
-            </TransitionProvider>
-          </AuroraBackground>
+          <PrivyProvider>
+            <AuroraBackground fixedInViewport={true}>
+              <TransitionProvider>
+                {children}
+              </TransitionProvider>
+            </AuroraBackground>
+          </PrivyProvider>
         </ThemeProvider>
       </body>
     </html>
