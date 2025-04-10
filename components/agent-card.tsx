@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Cpu, Zap, Radio, Wifi, Sun, Plug, ArrowRight, AlertTriangle } from "lucide-react"
+import { Cpu, Zap, Radio, Wifi, Sun, Plug, ArrowRight, AlertTriangle, Sparkles } from "lucide-react"
 
 interface AgentCardProps {
   name: string
@@ -13,11 +13,12 @@ interface AgentCardProps {
   revenue: string
   actions: number
   alert?: string
+  isNew?: boolean
 }
 
-export default function AgentCard({ name, deviceType, status, revenue, actions, alert }: AgentCardProps) {
+export default function AgentCard({ name, deviceType, status, revenue, actions, alert, isNew = false }: AgentCardProps) {
   return (
-    <Card className="overflow-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
+    <Card className={`overflow-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70 ${isNew ? 'ring-2 ring-emerald-400 dark:ring-emerald-600' : ''}`}>
       <div className="bg-gradient-to-br from-violet-50/95 to-slate-50/95 dark:from-slate-800/95 dark:to-violet-950/50 border-b border-slate-200/80 dark:border-slate-700/80 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
@@ -32,7 +33,10 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
             {getDeviceIcon(deviceType)}
           </div>
           <div>
-            <h3 className="font-medium text-lg">{name}</h3>
+            <div className="flex items-center gap-1">
+              <h3 className="font-medium text-lg">{name}</h3>
+              {isNew && <Sparkles className="h-4 w-4 text-amber-500 ml-1" />}
+            </div>
             <div className="flex items-center gap-2">
               <Badge
                 variant="outline"
@@ -67,12 +71,23 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
           </div>
         )}
 
+        {isNew && (
+          <div className="flex items-center gap-2 p-2 mb-3 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 text-sm rounded-md border border-emerald-200/70 dark:border-emerald-900/50">
+            <Sparkles className="w-4 h-4" />
+            <p>New agent deployed and ready</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <p className="text-sm text-slate-500 dark:text-slate-400">Weekly Revenue</p>
             <div className="flex items-baseline">
               <p className="text-2xl font-bold">${revenue}</p>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-1">+2.4%</span>
+              {parseFloat(revenue) > 0 ? (
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 ml-1">+2.4%</span>
+              ) : (
+                <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">starting</span>
+              )}
             </div>
           </div>
           <div>

@@ -107,6 +107,7 @@ export default function AgentLaunchpad() {
           totalSteps={totalSteps}
           nextStep={nextStep}
           prevStep={prevStep}
+          agentData={agentData}
           isNextDisabled={
             (currentStep === 1 && !agentData.deviceType) ||
             (currentStep === 2 && (!agentData.agentName || !agentData.agentDescription)) ||
