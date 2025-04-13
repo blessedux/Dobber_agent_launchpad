@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { TransitionLink } from "@/components/ui/transition-link"
 import { usePrivy } from "@/components/privy-provider"
 import { usePrivy as useBasePrivy } from "@privy-io/react-auth"
+import { LoginButton } from "@/components/login-button"
 
 const navItems = [
   { name: "Home", href: "/dashboard", icon: <Home className="w-5 h-5" /> },
@@ -22,7 +23,7 @@ const navItems = [
 export default function Navbar() {
   const pathname = usePathname()
   const { isAuthenticated } = usePrivy()
-  const { login, logout, authenticated, user } = useBasePrivy()
+  const { logout, authenticated, user } = useBasePrivy()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 dark:border-slate-700/50 bg-transparent backdrop-blur-sm">
@@ -71,14 +72,18 @@ export default function Navbar() {
                   {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
                 </span>
               )}
+              {user?.email && (
+                <span className="text-sm text-slate-600 dark:text-slate-400 hidden md:block">
+                  {user.email.address}
+                </span>
+              )}
             </div>
           ) : (
-            <Button 
-              className="bg-violet-600 hover:bg-violet-700 hidden sm:flex"
-              onClick={login}
-            >
-              Connect
-            </Button>
+            <LoginButton 
+              className="hidden sm:flex"
+              variant="default"
+              size="sm"
+            />
           )}
           <TransitionLink href="/help">
             <Button variant="ghost" size="icon" className="hidden sm:flex">

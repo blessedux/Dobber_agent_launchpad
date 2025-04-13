@@ -9,12 +9,13 @@ import { ChevronDown, Rocket, Server, Cpu, BarChart3 } from "lucide-react"
 import { usePrivy } from "@/components/privy-provider"
 import { usePrivy as useBasePrivy } from "@privy-io/react-auth"
 import { useRouter } from "next/navigation";
+import { LoginButton } from "@/components/login-button";
 
 // Separate client component for the landing page content that uses hooks
 function LandingPageContent() {
   const { isTransitioning } = useTransition();
   const aboutRef = useRef<HTMLDivElement>(null);
-  const { authenticated, user, login } = useBasePrivy();
+  const { authenticated, user } = useBasePrivy();
   const router = useRouter();
   
   // Effect to redirect to dashboard when authenticated
@@ -27,15 +28,7 @@ function LandingPageContent() {
   const scrollToAbout = () => {
     aboutRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-  
-  const handleCreateClick = () => {
-    if (authenticated) {
-      router.push("/dashboard");
-    } else {
-      login();
-    }
-  };
-  
+    
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -89,12 +82,10 @@ function LandingPageContent() {
             }}
             className="flex flex-col gap-4 w-full max-w-xs"
           >
-            <Button 
-              onClick={handleCreateClick}
+            <LoginButton 
               className="w-full bg-violet-600 hover:bg-violet-700 text-white px-6 py-6 text-lg"
-            >
-              Create
-            </Button>
+              size="lg"
+            />
             
             <Button
               variant="outline"
@@ -164,12 +155,10 @@ function LandingPageContent() {
           </div>
           
           <div className="mt-16 text-center">
-            <Button 
-              onClick={handleCreateClick}
+            <LoginButton 
               className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-6 text-lg"
-            >
-              Create
-            </Button>
+              size="lg"
+            />
           </div>
         </div>
       </div>

@@ -26,6 +26,43 @@ export default function StepNavigation({
   // Function to handle the final launch action
   const handleLaunchAgent = () => {
     // Here you would typically send the agent data to a backend
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
     console.log("Starting agent creation:", agentData)
     
     // Create a serialized version of the essential agent data
