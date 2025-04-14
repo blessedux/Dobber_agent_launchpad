@@ -1,7 +1,7 @@
 import type { AgentData } from "@/components/agent-launchpad"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Cpu, Zap, Radio, Wifi, Sun, Plug, Check } from "lucide-react"
+import { Cpu, Zap, Radio, Wifi, Sun, Plug, Check, Coins } from "lucide-react"
 
 interface LaunchAgentProps {
   agentData: AgentData
@@ -91,6 +91,73 @@ export default function LaunchAgent({ agentData }: LaunchAgentProps) {
               </ul>
             </div>
           </div>
+
+          {agentData.tokenSettings.enabled && (
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-violet-500" />
+                  <h4 className="text-sm font-medium text-slate-800 dark:text-slate-200">Agent Token</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Name:</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {agentData.tokenSettings.name}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Symbol:</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {agentData.tokenSettings.symbol}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Supply:</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {agentData.tokenSettings.supply.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Initial Price:</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        ${agentData.tokenSettings.initialPrice.toFixed(2)} USDC
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Creator Royalty:</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {agentData.tokenSettings.creatorRoyalty}%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-2 md:col-span-1">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Token Holder Rewards:</span>
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {agentData.tokenSettings.holderRewards}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -99,6 +166,9 @@ export default function LaunchAgent({ agentData }: LaunchAgentProps) {
           <span className="font-medium">Next steps:</span> After launching, your agent will begin managing your{" "}
           {getDeviceName(agentData.deviceType).toLowerCase()}. You can monitor its performance and earnings in the
           DOBBER dashboard.
+          {agentData.tokenSettings.enabled && (
+            <> Your agent token will be available for investment, allowing others to share in your agent's success.</>
+          )}
         </p>
       </div>
     </div>

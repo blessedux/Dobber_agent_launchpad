@@ -4,15 +4,22 @@ import type React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import Navbar from "@/components/navbar"
 import ProtectedRoute from "@/components/protected-route"
-import { AuroraBackground } from "@/components/ui/aurora-background"
-import NavigationMenu from '@/components/ui/navigation-menu'
-import UserNav from '@/components/ui/user-nav'
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Rocket, Home, ServerCog, Cpu, BarChart3, Settings, Network, LineChart, Workflow } from "lucide-react"
+import { 
+  Rocket, 
+  Home, 
+  Network, 
+  BarChart3, 
+  LineChart, 
+  Workflow,
+  LogOut,
+  HelpCircle
+} from "lucide-react"
 import { MobileMenu } from '@/components/mobile-menu'
+import { usePrivy as useBasePrivy } from "@privy-io/react-auth"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -28,6 +35,7 @@ const analyticsItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const { logout, authenticated, user } = useBasePrivy()
   
   return (
     <ProtectedRoute>
@@ -36,7 +44,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2 mr-6">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                <Image 
+                  src="/dobprotocol-logo.svg" 
+                  alt="DOB Protocol" 
+                  width={28}
+                  height={28}
+                  className="text-violet-600 dark:text-violet-400"
+                />
                 <span className="text-xl font-semibold tracking-tight hidden md:inline-block">DOBBER</span>
               </Link>
             </div>
@@ -77,8 +91,57 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ))}
             </nav>
             
-            <div className="flex items-center gap-4">
-              <UserNav />
+            <div className="flex items-center gap-3">
+              {authenticated && (
+                <div className="flex items-center gap-3">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link href="/help">
+                          <Button variant="ghost" size="icon" className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
+                            <HelpCircle className="h-5 w-5" />
+                          </Button>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs" side="bottom">
+                        <div className="space-y-2 p-1">
+                          <p className="font-semibold">Your Data is Secure</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            DOB Protocol takes your privacy seriously. Your wallet address and personal data 
+                            are stored securely and never shared with third parties. All agent operations 
+                            run in an encrypted environment with zero-knowledge verification.
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="hidden sm:flex items-center gap-1"
+                    onClick={logout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Disconnect</span>
+                  </Button>
+
+                  {user?.wallet && (
+                    <span className="text-sm text-slate-600 dark:text-slate-400 hidden md:block">
+                      {user.wallet.address.slice(0, 6)}...{user.wallet.address.slice(-4)}
+                    </span>
+                  )}
+                  
+                  <div className="ml-4 hidden md:block">
+                    <Image 
+                      src="/virtuals_logo.svg" 
+                      alt="Virtuals Protocol" 
+                      width={120} 
+                      height={32}
+                    />
+                  </div>
+                </div>
+              )}
               <MobileMenu />
             </div>
           </div>

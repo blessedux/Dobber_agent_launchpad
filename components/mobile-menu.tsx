@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle, LogOut, Network, LineChart, Workflow } from "lucide-react"
+import { Menu, Rocket, Home, Cpu, BarChart3, Settings, HelpCircle, LogOut, Network, LineChart, Workflow } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TransitionLink } from "@/components/ui/transition-link"
 import { usePrivy as useBasePrivy } from "@privy-io/react-auth"
@@ -49,7 +50,12 @@ export function MobileMenu() {
         <div className="flex items-center gap-2 mb-8">
           <TransitionLink href="/" onClick={() => setOpen(false)}>
             <div className="flex items-center gap-2">
-              <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <Image 
+                src="/dobprotocol-logo.svg" 
+                alt="DOB Protocol" 
+                width={28}
+                height={28}
+              />
               <span className="text-xl font-semibold tracking-tight">DOBBER</span>
             </div>
           </TransitionLink>
