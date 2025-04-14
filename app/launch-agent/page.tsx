@@ -10,70 +10,85 @@ export default function LaunchAgentPage() {
     console.log('Launch Agent Page loaded at:', window.location.pathname);
     console.log('Current URL:', window.location.href);
     
-    // Detect and PREVENT unwanted navigation attempts
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    // Check if this is an intentional navigation to the page
+    const intentionalNavigation = sessionStorage.getItem('intentionalLaunchNavigation');
+    const navigationTimestamp = sessionStorage.getItem('launchNavigationTimestamp');
+    const isIntentional = intentionalNavigation && navigationTimestamp && 
+        (Date.now() - parseInt(navigationTimestamp) < 10000);
     
-    history.pushState = function(...args: any[]) {
-      console.log('history.pushState called with:', args);
-      // If this is a redirect back to home or dashboard, BLOCK it unless explicitly triggered
-      if (args[2] && typeof args[2] === 'string' && 
-          (args[2] === '/' || args[2].startsWith('/dashboard'))) {
-        console.error('BLOCKING UNWANTED REDIRECT TO:', args[2]);
-        // Only block if not coming from legitimate agent creation
-        const isValidRedirect = sessionStorage.getItem('agentCompleted');
-        if (!isValidRedirect) {
-          console.log('Navigation prevented - not from agent creation flow');
-          return null; // Block the navigation
-        }
-      }
-      return originalPushState.apply(history, args as any);
-    };
+    console.log('Navigation intent check:', { isIntentional });
     
-    history.replaceState = function(...args: any[]) {
-      console.log('history.replaceState called with:', args);
-      // If this is a redirect back to home or dashboard, BLOCK it unless explicitly triggered
-      if (args[2] && typeof args[2] === 'string' && 
-          (args[2] === '/' || args[2].startsWith('/dashboard'))) {
-        console.error('BLOCKING UNWANTED REDIRECT TO:', args[2]);
-        // Only block if not coming from legitimate agent creation
-        const isValidRedirect = sessionStorage.getItem('agentCompleted');
-        if (!isValidRedirect) {
-          console.log('Navigation prevented - not from agent creation flow');
-          return null; // Block the navigation
-        }
-      }
-      return originalReplaceState.apply(history, args as any);
-    };
+    // Clear the navigation flags
+    sessionStorage.removeItem('intentionalLaunchNavigation');
+    sessionStorage.removeItem('launchNavigationTimestamp');
     
-    // Block direct navigation away
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // Only allow navigation if we're going to creating-agent or if it's a legitimate dashboard redirect
-      const isLaunchingAgent = sessionStorage.getItem('launchingAgent');
-      const isAgentCompleted = sessionStorage.getItem('agentCompleted');
+    // Only apply blocking logic if this wasn't an intentional navigation
+    if (!isIntentional) {
+      // Detect and PREVENT unwanted navigation attempts
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
       
-      if (!isLaunchingAgent && !isAgentCompleted) {
-        console.log('Blocking navigation away from launch-agent page');
-        event.preventDefault();
-        event.returnValue = '';
-        return '';
-      }
-    };
-    
-    // Track all navigation events
-    const handlePopState = () => {
-      console.log('popstate event fired', window.location.pathname);
-    };
-    
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+      history.pushState = function(...args: any[]) {
+        console.log('history.pushState called with:', args);
+        // If this is a redirect back to home or dashboard, BLOCK it unless explicitly triggered
+        if (args[2] && typeof args[2] === 'string' && 
+            (args[2] === '/' || args[2].startsWith('/dashboard'))) {
+          console.error('BLOCKING UNWANTED REDIRECT TO:', args[2]);
+          // Only block if not coming from legitimate agent creation
+          const isValidRedirect = sessionStorage.getItem('agentCompleted');
+          if (!isValidRedirect) {
+            console.log('Navigation prevented - not from agent creation flow');
+            return null; // Block the navigation
+          }
+        }
+        return originalPushState.apply(history, args as any);
+      };
+      
+      history.replaceState = function(...args: any[]) {
+        console.log('history.replaceState called with:', args);
+        // If this is a redirect back to home or dashboard, BLOCK it unless explicitly triggered
+        if (args[2] && typeof args[2] === 'string' && 
+            (args[2] === '/' || args[2].startsWith('/dashboard'))) {
+          console.error('BLOCKING UNWANTED REDIRECT TO:', args[2]);
+          // Only block if not coming from legitimate agent creation
+          const isValidRedirect = sessionStorage.getItem('agentCompleted');
+          if (!isValidRedirect) {
+            console.log('Navigation prevented - not from agent creation flow');
+            return null; // Block the navigation
+          }
+        }
+        return originalReplaceState.apply(history, args as any);
+      };
+      
+      // Block direct navigation away
+      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        // Only allow navigation if we're going to creating-agent or if it's a legitimate dashboard redirect
+        const isLaunchingAgent = sessionStorage.getItem('launchingAgent');
+        const isAgentCompleted = sessionStorage.getItem('agentCompleted');
+        
+        if (!isLaunchingAgent && !isAgentCompleted) {
+          console.log('Blocking navigation away from launch-agent page');
+          event.preventDefault();
+          event.returnValue = '';
+          return '';
+        }
+      };
+      
+      // Track all navigation events
+      const handlePopState = () => {
+        console.log('popstate event fired', window.location.pathname);
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      return () => {
+        history.pushState = originalPushState;
+        history.replaceState = originalReplaceState;
+        window.removeEventListener('popstate', handlePopState);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
   }, []);
   
   return (

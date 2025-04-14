@@ -146,10 +146,10 @@ export default function AgentsPage() {
           <p className="text-slate-600 dark:text-slate-300 mt-1">Manage your autonomous AI agents</p>
         </div>
 
-        <TransitionLink href="/launch-agent">
+        <TransitionLink href="/launch-agent" isLaunchAgent={true}>
           <Button className="bg-violet-600 hover:bg-violet-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Launch New Agent
+            <Plus className="h-4 w-4 mr-2" />
+            Deploy Agent
           </Button>
         </TransitionLink>
       </motion.div>

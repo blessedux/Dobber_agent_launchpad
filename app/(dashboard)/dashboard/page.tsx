@@ -103,23 +103,38 @@ export default function Dashboard() {
       // Check for valid completion
       const isAgentCompleted = sessionStorage.getItem('agentCompleted');
       const completionTimestamp = sessionStorage.getItem('completionTimestamp');
+      const redirectedFromCreation = sessionStorage.getItem('redirectedFromAgentCreation');
       const now = Date.now();
       
-      // Clear the flags
+      // Improved verification with multiple flags
+      const hasValidQueryParams = searchParams.get('name') && searchParams.get('type');
+      const hasValidTimeStamp = completionTimestamp && (now - parseInt(completionTimestamp) < 60000);
+      const hasValidRedirectFlag = isAgentCompleted === 'true' || redirectedFromCreation === 'true';
+      
+      console.log('Agent creation verification:', {
+        hasValidQueryParams,
+        hasValidTimeStamp,
+        hasValidRedirectFlag
+      });
+      
+      // Clear the flags to prevent reuse
       sessionStorage.removeItem('agentCompleted');
       sessionStorage.removeItem('completionTimestamp');
+      sessionStorage.removeItem('redirectedFromAgentCreation');
       
-      // Only show success if we have a valid completion flag or legitimate params
-      if ((isAgentCompleted && completionTimestamp && 
-           now - parseInt(completionTimestamp) < 60000) ||
-          (searchParams.get('name') && searchParams.get('type'))) {
+      // Only show success if we have a valid completion through any verification method
+      if ((hasValidRedirectFlag && hasValidTimeStamp) || hasValidQueryParams) {
         console.log('Valid agent creation completion detected');
         setShowSuccess(true);
         
-        // Get the agent data from URL parameters
-        const agentName = searchParams.get('name') || generateAgentName()
-        const deviceType = searchParams.get('type') || "compute-node"
-        const agentDescription = searchParams.get('desc') || ""
+        // Get the agent data from URL parameters or session storage
+        const agentName = searchParams.get('name') || sessionStorage.getItem('agentName') || generateAgentName();
+        const deviceType = searchParams.get('type') || sessionStorage.getItem('agentType') || "compute-node";
+        const agentDescription = searchParams.get('desc') || "";
+        
+        // Clear the session storage agent data
+        sessionStorage.removeItem('agentName');
+        sessionStorage.removeItem('agentType');
         
         // Create the new agent with actual data
         const newAgent = {
@@ -709,7 +724,7 @@ export default function Dashboard() {
 
         {/* Use a regular link as backup if TransitionLink fails in production */}
         <div className="relative">
-          <TransitionLink href="/launch-agent">
+          <TransitionLink href="/launch-agent" isLaunchAgent={true}>
             <Button className="bg-violet-600 hover:bg-violet-700">
               <Plus className="w-4 h-4 mr-2" />
               Deploy Agent
@@ -1120,7 +1135,7 @@ export default function Dashboard() {
                         />
                       </div>
                     ))}
-                    <TransitionLink href="/launch-agent">
+                    <TransitionLink href="/launch-agent" isLaunchAgent={true}>
                       <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-6 h-full flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-slate-800/70 transition-all">
                         <div className="bg-violet-100 dark:bg-violet-900/40 p-3 rounded-full mb-4">
                           <Plus className="h-6 w-6 text-violet-600 dark:text-violet-400" />

@@ -9,7 +9,9 @@ import UserPortfolio from '@/components/UserPortfolio';
 import VerificationSummary from '@/components/VerificationSummary';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Wallet, Coins, Shield } from 'lucide-react';
+import { Search, Wallet, Coins, Shield, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 // Mock wallet address - in a real app this would come from authentication
 const MOCK_WALLET_ADDRESS = '0x1234567890abcdef1234567890abcdef12345678';
@@ -49,8 +51,14 @@ export default function TokensPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Agent Tokens</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Agent Tokens</h1>
+        <TransitionLink href="/launch-agent" isLaunchAgent={true}>
+          <Button className="bg-violet-600 hover:bg-violet-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Agent Token
+          </Button>
+        </TransitionLink>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

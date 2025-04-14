@@ -344,31 +344,55 @@ export default function CreatingAgentPage() {
           sessionStorage.setItem('agentCompleted', 'true');
           sessionStorage.setItem('completionTimestamp', Date.now().toString());
           
-          console.log('Using form submission to navigate to dashboard');
+          // Set additional data for better reliability
+          sessionStorage.setItem('redirectedFromAgentCreation', 'true');
+          sessionStorage.setItem('agentName', agentName);
+          sessionStorage.setItem('agentType', deviceType);
           
-          // Use a form submission to navigate to avoid redirect issues
-          const form = document.createElement('form');
-          form.method = 'GET';
-          form.action = fullDashboardUrl;
-          form.style.display = 'none';
+          console.log('Navigating to dashboard with successful agent creation');
           
-          // Add the parameters as hidden inputs
-          Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value;
-            form.appendChild(input);
-          });
+          // Define a function to try multiple navigation methods
+          const tryNavigation = () => {
+            try {
+              // First attempt: direct location change (most reliable)
+              window.location.href = fullDashboardUrl;
+              
+              // Second attempt (fallback): use form submission
+              setTimeout(() => {
+                try {
+                  // Create and submit a form
+                  const form = document.createElement('form');
+                  form.method = 'GET';
+                  form.action = fullDashboardUrl;
+                  form.style.display = 'none';
+                  
+                  // Add all parameters as hidden inputs
+                  Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
+                  });
+                  
+                  // Append and submit
+                  document.body.appendChild(form);
+                  form.submit();
+                } catch (innerError) {
+                  console.error('Form navigation failed:', innerError);
+                }
+              }, 200);
+              
+            } catch (error) {
+              console.error('Navigation to dashboard failed:', error);
+              // Last resort: force reload to homepage
+              window.location.href = window.location.origin + '/dashboard';
+            }
+          };
           
-          // Add the form to the document and submit it
-          document.body.appendChild(form);
-          form.submit();
+          // Execute navigation
+          tryNavigation();
           
-          // Fallback direct navigation if form submission fails
-          setTimeout(() => {
-            window.location.href = fullDashboardUrl;
-          }, 200);
         }, 1000) // Delay after completion animation
       }
     }, 600) // Time between steps

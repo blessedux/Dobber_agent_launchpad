@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useTransition } from "@/components/transition-provider";
 
@@ -14,7 +14,11 @@ type TransitionLinkProps = {
   scroll?: boolean;
   shallow?: boolean;
   locale?: string | false;
+  isLaunchAgent?: boolean;
 };
+
+// Keep track of recent navigation attempts globally to prevent loops
+const recentNavigationAttempts: Record<string, number> = {};
 
 // Inner component that uses the hooks
 function TransitionLinkInner({
@@ -22,14 +26,21 @@ function TransitionLinkInner({
   className,
   children,
   onClick,
+  isLaunchAgent = false,
   ...props
 }: TransitionLinkProps) {
+  const [allowNavigation, setAllowNavigation] = useState(true);
+  
   // Use try/catch to handle potential errors with the context
   let isTransitioning = false;
   try {
     const transitionContext = useTransition();
     isTransitioning = transitionContext?.isTransitioning || false;
-    console.log('TransitionLink to:', href, 'isTransitioning:', isTransitioning);
+    
+    // Only log if this is not a menu prefetch
+    if (!href.includes('/help/') && !href.endsWith('/help')) {
+      console.log('TransitionLink to:', href, 'isTransitioning:', isTransitioning, 'isLaunchAgent:', isLaunchAgent);
+    }
   } catch (error) {
     console.error('Error in TransitionLink context:', error);
     // If context fails, continue without transition state
@@ -37,20 +48,63 @@ function TransitionLinkInner({
 
   // Ensure href starts with a slash for correct production routing
   const formattedHref = href.startsWith('/') ? href : `/${href}`;
+  
+  // Anti-loop protection
+  useEffect(() => {
+    // Clean up old navigation attempts (older than 10 seconds)
+    const now = Date.now();
+    Object.keys(recentNavigationAttempts).forEach(url => {
+      if (now - recentNavigationAttempts[url] > 10000) {
+        delete recentNavigationAttempts[url];
+      }
+    });
+  }, []);
+
+  // Handle special case for launch-agent link
+  useEffect(() => {
+    if (isLaunchAgent && formattedHref === '/launch-agent') {
+      setAllowNavigation(true);
+    }
+  }, [isLaunchAgent, formattedHref]);
 
   const handleClick = (e: React.MouseEvent) => {
-    console.log('TransitionLink clicked:', formattedHref);
+    // Special handling for Launch Agent button
+    if (isLaunchAgent && formattedHref === '/launch-agent') {
+      console.log('Launch Agent button clicked, allowing navigation');
+      
+      // Set a flag to indicate this is an intentional launch agent navigation
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+        sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+      }
+      
+      // Don't prevent default - let it navigate normally
+      if (onClick) {
+        onClick(e);
+      }
+      return;
+    }
+    
+    // Check if we've tried to navigate to this URL too many times recently
+    const now = Date.now();
+    const recentAttempts = recentNavigationAttempts[formattedHref] || 0;
+    
+    if (recentAttempts > 5) {
+      console.warn(`Too many navigation attempts to ${formattedHref}, blocking to prevent loops`);
+      e.preventDefault();
+      return;
+    }
+    
+    // Record this navigation attempt
+    recentNavigationAttempts[formattedHref] = now;
     
     // For production environment, use direct location change if Next router fails
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-      // Allow the default Link behavior to try first
-      setTimeout(() => {
-        // If we're still on the same page after a short delay, force navigation
-        if (window.location.pathname !== formattedHref.split('?')[0]) {
-          console.log('Navigation appears to have failed, redirecting manually');
-          window.location.href = formattedHref;
-        }
-      }, 100);
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && allowNavigation) {
+      // If this is a launch-agent link, store a flag to prevent redirect loops
+      if (formattedHref === '/launch-agent') {
+        sessionStorage.setItem('redirectedToLaunchAgent', 'true');
+        sessionStorage.setItem('redirectTimestamp', Date.now().toString());
+      }
     }
     
     if (onClick) {
@@ -85,6 +139,22 @@ export const TransitionLink: React.FC<TransitionLinkProps> = (props) => {
     console.error('TransitionLink fallback due to error:', error);
     // Direct fallback to standard Link if the transition context breaks
     const href = props.href.startsWith('/') ? props.href : `/${props.href}`;
+    
+    // Handle special case for launch agent button
+    if (props.isLaunchAgent && props.href === '/launch-agent') {
+      return (
+        <a 
+          href={href}
+          className={props.className}
+          onClick={(e) => {
+            if (props.onClick) props.onClick(e);
+            console.log('Direct navigation to launch agent page');
+          }}
+        >
+          {props.children}
+        </a>
+      );
+    }
     
     // In production, add a direct link as well
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {

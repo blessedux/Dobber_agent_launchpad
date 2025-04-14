@@ -40,86 +40,57 @@ export default function StepNavigation({
     const fullTargetUrl = window.location.origin + targetUrl;
     
     console.log("Redirecting to:", targetUrl);
-    console.log("Production full URL:", fullTargetUrl);
     
-    // RADICAL APPROACH: Create and open a new window, then close this one
-    // This completely bypasses any redirection logic in the current window
     try {
-      // Store in session storage
+      // Set flags in sessionStorage to indicate this is a valid navigation
       sessionStorage.setItem('launchingAgent', 'true');
       sessionStorage.setItem('launchTimestamp', Date.now().toString());
-      sessionStorage.setItem('noRedirect', 'true');
       sessionStorage.setItem('agentData', JSON.stringify({
         name: agentData.agentName,
         type: agentData.deviceType,
         desc: agentData.agentDescription?.substring(0, 100) || "",
       }));
       
-      console.log("Using radical navigation approach");
+      console.log("Navigating to creating-agent page");
       
-      // APPROACH 1: Try iframe method
-      // Create an invisible iframe that will load the target page
-      const iframe = document.createElement('iframe');
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.position = 'fixed';
-      iframe.style.top = '0';
-      iframe.style.left = '0';
-      iframe.style.zIndex = '9999';
-      iframe.style.border = 'none';
-      iframe.style.backgroundColor = '#fff';
+      // Use a reliable method for navigation
+      // First, create the form for a solid fallback
+      const form = document.createElement('form');
+      form.method = 'GET';
+      form.action = fullTargetUrl;
+      form.style.display = 'none';
       
-      // When iframe loads, make it take over the entire page
-      iframe.onload = () => {
-        console.log("iframe loaded successfully");
-        
-        // Ensure the iframe takes over the entire page
-        document.body.innerHTML = '';
-        document.body.style.margin = '0';
-        document.body.style.padding = '0';
-        document.body.style.overflow = 'hidden';
-        
-        // Make current page redirect to the same URL in case iframe approach fails
-        setTimeout(() => {
-          document.location.href = fullTargetUrl;
-        }, 100);
-      };
+      // Add all parameters as hidden inputs
+      Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
       
-      // Set the iframe source and add it to the document
-      iframe.src = fullTargetUrl;
-      document.body.appendChild(iframe);
+      // Add the form to the document
+      document.body.appendChild(form);
       
-      // APPROACH 2: Fallback to form POST - works more reliably for cross-domain navigation
+      // Use direct location change first (most reliable for single page apps)
       setTimeout(() => {
-        // Form POST method (more reliable than GET for preserving data)
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = fullTargetUrl;
-        form.target = '_self';
-        form.style.display = 'none';
-        
-        // Add parameters
-        Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = value;
-          form.appendChild(input);
-        });
-        
-        // Append and submit
-        document.body.appendChild(form);
+        try {
+          window.location.href = fullTargetUrl;
+        } catch (e) {
+          console.error("Direct navigation failed, using form submit", e);
+          // If that fails, submit the form
+          form.submit();
+        }
+      }, 100);
+      
+      // Set a backup timeout for form submission
+      setTimeout(() => {
         form.submit();
-      }, 200);
-      
-      // APPROACH 3: Last resort - direct location change
-      setTimeout(() => {
-        document.location.href = fullTargetUrl;
       }, 300);
     } catch (error) {
       console.error("Navigation error:", error);
-      // Ultimate fallback - open in a new tab
-      window.open(fullTargetUrl, '_self');
+      // Ultimate fallback - try direct navigation again
+      window.location.href = fullTargetUrl;
     }
   }
 
