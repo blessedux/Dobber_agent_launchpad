@@ -15,6 +15,12 @@ import { Plus, ArrowRight, BarChart2, Clock, ActivitySquare, Network, Sun, Plug,
 import { TransitionLink } from "@/components/ui/transition-link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
+import RevenueDistributionChart from "@/components/charts/RevenueDistributionChart"
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+
+// Define types
+type DeviceType = 'solar-node' | 'ev-charger' | 'helium-miner' | 'compute-node';
 
 // This is a mock to simulate a new user with no agents
 const userHasAgents = true
@@ -22,7 +28,7 @@ const userHasAgents = true
 export default function Dashboard() {
   const searchParams = useSearchParams()
   const [showSuccess, setShowSuccess] = useState(false)
-  const [selectedTab, setSelectedTab] = useState("agents")
+  const [selectedTab, setSelectedTab] = useState("analytics")
   const [agents, setAgents] = useState([
     {
       name: "SolarOptimizer",
@@ -52,7 +58,8 @@ export default function Dashboard() {
     // Check if agent was just created
     if (searchParams.get('agentCreated') === 'true') {
       setShowSuccess(true)
-      setSelectedTab("agents") // Ensure "agents" tab is selected
+      // Don't change the selected tab when agent is created
+      // setSelectedTab("agents") // Ensure "agents" tab is selected
       
       // Get the agent data from URL parameters
       const agentName = searchParams.get('name') || generateAgentName()
@@ -91,6 +98,38 @@ export default function Dashboard() {
   const calculateTotalRevenue = () => {
     return agents.reduce((sum, agent) => sum + parseFloat(agent.revenue), 0).toFixed(2)
   }
+
+  // Prepare revenue data for the chart
+  const revenueData = [
+    {
+      name: "Solar Nodes",
+      type: "solar-node" as DeviceType,
+      revenue: 342.87,
+      percentage: 63,
+      color: '#f59e0b'
+    },
+    {
+      name: "EV Chargers",
+      type: "ev-charger" as DeviceType,
+      revenue: 128.34,
+      percentage: 24,
+      color: '#10b981'
+    },
+    {
+      name: "Helium Miners",
+      type: "helium-miner" as DeviceType,
+      revenue: 72.19,
+      percentage: 13,
+      color: '#8b5cf6'
+    }
+  ];
+
+  // Create Material UI theme
+  const darkTheme = createTheme({
+    palette: {
+      mode: 'dark',
+    },
+  });
 
   return (
     <main className="container px-4 py-8 md:py-12">
@@ -205,16 +244,60 @@ export default function Dashboard() {
           <div className="xl:col-span-9 space-y-6">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
               <TabsList className="w-full mb-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm">
+                <TabsTrigger value="analytics" className="flex-1">
+                  Revenue Streams
+                </TabsTrigger>
                 <TabsTrigger value="agents" className="flex-1">
                   Agent Swarm
                 </TabsTrigger>
                 <TabsTrigger value="devices" className="flex-1">
                   Device Network
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex-1">
-                  Revenue Streams
-                </TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="analytics" className="space-y-4">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ThemeProvider theme={darkTheme}>
+                    <CssBaseline />
+                    <RevenueDistributionChart 
+                      data={revenueData}
+                      totalRevenue={parseFloat(calculateTotalRevenue())}
+                      weeklyGrowth="+14.8%"
+                      monthlyProjection={parseFloat(calculateTotalRevenue()) * 4.3}
+                    />
+                  </ThemeProvider>
+                  
+                  <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
+                    <h3 className="text-lg font-medium mb-4">Revenue Streams by Device Type</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center relative overflow-hidden">
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-amber-500/30"></div>
+                        <div className="w-full h-1 bg-amber-500 absolute bottom-0 left-0" style={{ width: '63%' }}></div>
+                        <Sun className="h-8 w-8 text-amber-500 mb-2" />
+                        <span className="font-bold text-xl">$342.87</span>
+                        <span className="text-xs text-slate-500">Solar Nodes</span>
+                        <span className="text-xs mt-2 text-amber-600 dark:text-amber-400 font-medium">63% of revenue</span>
+                      </div>
+                      <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center relative overflow-hidden">
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-emerald-500/30"></div>
+                        <div className="w-full h-1 bg-emerald-500 absolute bottom-0 left-0" style={{ width: '24%' }}></div>
+                        <Plug className="h-8 w-8 text-emerald-500 mb-2" />
+                        <span className="font-bold text-xl">$128.34</span>
+                        <span className="text-xs text-slate-500">EV Chargers</span>
+                        <span className="text-xs mt-2 text-emerald-600 dark:text-emerald-400 font-medium">24% of revenue</span>
+                      </div>
+                      <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center relative overflow-hidden">
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-violet-500/30"></div>
+                        <div className="w-full h-1 bg-violet-500 absolute bottom-0 left-0" style={{ width: '13%' }}></div>
+                        <Radio className="h-8 w-8 text-violet-500 mb-2" />
+                        <span className="font-bold text-xl">$72.19</span>
+                        <span className="text-xs text-slate-500">Helium Miners</span>
+                        <span className="text-xs mt-2 text-violet-600 dark:text-violet-400 font-medium">13% of revenue</span>
+                      </div>
+                    </div>
+                  </Card>
+                </Suspense>
+              </TabsContent>
               
               <TabsContent value="agents" className="space-y-4">
                 <Suspense fallback={<LoadingSpinner />}>
@@ -285,40 +368,6 @@ export default function Dashboard() {
                         <p className="text-sm text-center text-slate-500 dark:text-slate-400 mt-2">Expand your decentralized network</p>
                       </div>
                     </TransitionLink>
-                  </div>
-                </Suspense>
-              </TabsContent>
-              
-              <TabsContent value="analytics" className="space-y-4">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <div className="grid grid-cols-1 gap-4">
-                    <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
-                      <h3 className="text-lg font-medium mb-4">Revenue Distribution</h3>
-                      <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                        <p className="text-slate-500 dark:text-slate-400">Analytics charts would appear here</p>
-                      </div>
-                    </Card>
-                    
-                    <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
-                      <h3 className="text-lg font-medium mb-4">Revenue Streams by Device Type</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center">
-                          <Sun className="h-8 w-8 text-amber-500 mb-2" />
-                          <span className="font-bold text-lg">$342.87</span>
-                          <span className="text-xs text-slate-500">Solar Nodes</span>
-                        </div>
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center">
-                          <Plug className="h-8 w-8 text-emerald-500 mb-2" />
-                          <span className="font-bold text-lg">$128.34</span>
-                          <span className="text-xs text-slate-500">EV Chargers</span>
-                        </div>
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center">
-                          <Radio className="h-8 w-8 text-violet-500 mb-2" />
-                          <span className="font-bold text-lg">$72.19</span>
-                          <span className="text-xs text-slate-500">Helium Miners</span>
-                        </div>
-                      </div>
-                    </Card>
                   </div>
                 </Suspense>
               </TabsContent>
