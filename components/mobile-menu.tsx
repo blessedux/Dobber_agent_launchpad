@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Rocket, Home, ServerCog, Cpu, BarChart3, Settings, HelpCircle, LogOut } from "lucide-react"
+import { Menu, Rocket, Home, Cpu, BarChart3, Settings, HelpCircle, LogOut, Network, LineChart, Workflow } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TransitionLink } from "@/components/ui/transition-link"
 import { usePrivy as useBasePrivy } from "@privy-io/react-auth"
@@ -16,11 +17,15 @@ export function MobileMenu() {
   const { login, logout, authenticated, user } = useBasePrivy()
 
   const navItems = [
-    { name: "Home", href: "/dashboard", icon: <Home className="w-5 h-5" /> },
+    { name: "Dashboard", href: "/dashboard", icon: <Home className="w-5 h-5" /> },
     { name: "Agents", href: "/agents", icon: <Rocket className="w-5 h-5" /> },
-    { name: "Devices", href: "/devices", icon: <Cpu className="w-5 h-5" /> },
-    { name: "Profit Pools", href: "/profit-pools", icon: <BarChart3 className="w-5 h-5" /> },
-    { name: "Settings", href: "/settings", icon: <Settings className="w-5 h-5" /> },
+    { name: "Device Network", href: "/device-network", icon: <Network className="w-5 h-5" /> },
+    { name: "Portfolio", href: "/portfolio", icon: <BarChart3 className="w-5 h-5" /> },
+  ]
+  
+  const analyticsItems = [
+    { name: "Performance", href: "/performance", icon: <LineChart className="w-5 h-5" /> },
+    { name: "Ecosystem", href: "/ecosystem", icon: <Workflow className="w-5 h-5" /> },
   ]
 
   const handleLogin = () => {
@@ -45,7 +50,12 @@ export function MobileMenu() {
         <div className="flex items-center gap-2 mb-8">
           <TransitionLink href="/" onClick={() => setOpen(false)}>
             <div className="flex items-center gap-2">
-              <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <Image 
+                src="/dobprotocol-logo.svg" 
+                alt="DOB Protocol" 
+                width={28}
+                height={28}
+              />
               <span className="text-xl font-semibold tracking-tight">DOBBER</span>
             </div>
           </TransitionLink>
@@ -67,6 +77,28 @@ export function MobileMenu() {
               {item.name}
             </TransitionLink>
           ))}
+          
+          <div className="border-t border-slate-200 dark:border-slate-700 my-2 pt-2">
+            <div className="px-3 py-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+              Analytics
+            </div>
+            {analyticsItems.map((item) => (
+              <TransitionLink
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center text-sm font-medium transition-colors px-3 py-2 rounded-md",
+                  pathname === item.href
+                    ? "text-violet-900 dark:text-violet-100 bg-violet-100 dark:bg-violet-900/40"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+                )}
+              >
+                <span className="mr-2">{item.icon}</span>
+                {item.name}
+              </TransitionLink>
+            ))}
+          </div>
 
           <div className="border-t border-slate-200 dark:border-slate-700 my-4 pt-4">
             {authenticated ? (

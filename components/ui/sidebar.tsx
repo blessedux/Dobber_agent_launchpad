@@ -4,6 +4,8 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -18,6 +20,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  LayoutDashboard,
+  Zap,
+  Bot,
+  Coins,
+  Shield,
+  Settings,
+  Users,
+  Network,
+} from 'lucide-react'
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -176,6 +188,45 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const pathname = usePathname()
+
+    const navItems = [
+      {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+      },
+      {
+        name: 'Agents',
+        href: '/agents',
+        icon: Bot,
+      },
+      {
+        name: 'Tokens',
+        href: '/tokens',
+        icon: Coins,
+      },
+      {
+        name: 'Device Network',
+        href: '/device-network',
+        icon: Network,
+      },
+      {
+        name: 'Users',
+        href: '/users',
+        icon: Users,
+      },
+      {
+        name: 'Security',
+        href: '/security',
+        icon: Shield,
+      },
+      {
+        name: 'Settings',
+        href: '/settings',
+        icon: Settings,
+      },
+    ]
 
     if (collapsible === "none") {
       return (
@@ -206,7 +257,33 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div className="flex h-full w-full flex-col">
+              <div className="px-4 py-2">
+                <Link href="/dashboard" className="flex items-center gap-2">
+                  <Zap className="w-6 h-6 text-violet-600" />
+                  <h2 className="text-xl font-bold tracking-tight">DOB Protocol</h2>
+                </Link>
+              </div>
+              <div className="px-3">
+                {navItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <Button
+                      variant={pathname.startsWith(item.href) ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className={cn(
+                        'w-full justify-start mb-1',
+                        pathname.startsWith(item.href)
+                          ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-900 dark:text-violet-50'
+                          : 'hover:bg-violet-50 dark:hover:bg-violet-900/20'
+                      )}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.name}
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
       )
@@ -250,7 +327,31 @@ const Sidebar = React.forwardRef<
             data-sidebar="sidebar"
             className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
           >
-            {children}
+            <div className="px-4 py-2">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <Zap className="w-6 h-6 text-violet-600" />
+                <h2 className="text-xl font-bold tracking-tight">DOB Protocol</h2>
+              </Link>
+            </div>
+            <div className="px-3">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <Button
+                    variant={pathname.startsWith(item.href) ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={cn(
+                      'w-full justify-start mb-1',
+                      pathname.startsWith(item.href)
+                        ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-900 dark:text-violet-50'
+                        : 'hover:bg-violet-50 dark:hover:bg-violet-900/20'
+                    )}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.name}
+                  </Button>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

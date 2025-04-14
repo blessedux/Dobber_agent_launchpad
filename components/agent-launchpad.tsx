@@ -7,6 +7,7 @@ import StepIndicator from "@/components/step-indicator"
 import DeviceSelection from "@/components/steps/device-selection"
 import AgentDescription from "@/components/steps/agent-description"
 import OnChainLogic from "@/components/steps/on-chain-logic"
+import TokenConfiguration from "@/components/steps/token-configuration"
 import DeviceConnection from "@/components/steps/device-connection"
 import LaunchAgent from "@/components/steps/launch-agent"
 import StepNavigation from "@/components/step-navigation"
@@ -25,6 +26,15 @@ export type AgentData = {
     deposit: boolean
     manage: boolean
   }
+  tokenSettings: {
+    enabled: boolean
+    name: string
+    symbol: string
+    supply: number
+    initialPrice: number
+    creatorRoyalty: number
+    holderRewards: number
+  }
   pluginInstalled: boolean
 }
 
@@ -42,6 +52,15 @@ const initialAgentData: AgentData = {
     deposit: true,
     manage: true,
   },
+  tokenSettings: {
+    enabled: true,
+    name: "",
+    symbol: "",
+    supply: 10000,
+    initialPrice: 0.1,
+    creatorRoyalty: 10,
+    holderRewards: 70
+  },
   pluginInstalled: false,
 }
 
@@ -49,7 +68,7 @@ export default function AgentLaunchpad() {
   const [currentStep, setCurrentStep] = useState(1)
   const [agentData, setAgentData] = useState<AgentData>(initialAgentData)
 
-  const totalSteps = 5
+  const totalSteps = 6
 
   const updateAgentData = (data: Partial<AgentData>) => {
     setAgentData((prev) => ({ ...prev, ...data }))
@@ -76,8 +95,10 @@ export default function AgentLaunchpad() {
       case 3:
         return <OnChainLogic agentData={agentData} updateAgentData={updateAgentData} />
       case 4:
-        return <DeviceConnection agentData={agentData} updateAgentData={updateAgentData} />
+        return <TokenConfiguration agentData={agentData} updateAgentData={updateAgentData} />
       case 5:
+        return <DeviceConnection agentData={agentData} updateAgentData={updateAgentData} />
+      case 6:
         return <LaunchAgent agentData={agentData} />
       default:
         return null
@@ -112,7 +133,9 @@ export default function AgentLaunchpad() {
             (currentStep === 1 && !agentData.deviceType) ||
             (currentStep === 2 && (!agentData.agentName || !agentData.agentDescription)) ||
             (currentStep === 3 && (!agentData.profitPoolAddress || !agentData.rewardDestination)) ||
-            (currentStep === 4 && !agentData.pluginInstalled)
+            (currentStep === 4 && agentData.tokenSettings.enabled && 
+              (!agentData.tokenSettings.name || !agentData.tokenSettings.symbol)) ||
+            (currentStep === 5 && !agentData.pluginInstalled)
           }
         />
       </Card>
