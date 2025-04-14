@@ -208,6 +208,9 @@ export default function RevenueDistributionChart({ data, totalRevenue, weeklyGro
   const [chartsRendered, setChartsRendered] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Animation ref for tracking if first load animation has played
+  const [animatedOnce, setAnimatedOnce] = useState(false);
+  
   // Apply visibility fixes to charts after they're rendered
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -240,6 +243,61 @@ export default function RevenueDistributionChart({ data, totalRevenue, weeklyGro
     
     return () => clearTimeout(timer);
   }, [chartType]);
+
+  // Add animation when component mounts
+  useEffect(() => {
+    if (!animatedOnce) {
+      // Find all chart elements to animate
+      const timer = setTimeout(() => {
+        const chartElements = containerRef.current?.querySelectorAll('.recharts-layer');
+        if (chartElements && chartElements.length) {
+          chartElements.forEach((el, index) => {
+            // Stagger the animations
+            const delay = index * 100;
+            
+            // Apply animation with CSS
+            el.animate(
+              [
+                { opacity: 0, transform: 'translateY(20px)' },
+                { opacity: 1, transform: 'translateY(0)' }
+              ],
+              {
+                duration: 600,
+                delay: delay,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                fill: 'forwards'
+              }
+            );
+          });
+          
+          // Specifically animate the pie chart if it's visible
+          if (chartType === 'pie') {
+            const pieSegments = containerRef.current?.querySelectorAll('.recharts-pie-sector');
+            pieSegments?.forEach((segment, i) => {
+              segment.style.transformOrigin = 'center';
+              segment.animate(
+                [
+                  { opacity: 0, transform: 'scale(0)' },
+                  { opacity: 1, transform: 'scale(1)' }
+                ],
+                {
+                  duration: 800,
+                  delay: i * 150,
+                  easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  fill: 'forwards'
+                }
+              );
+            });
+          }
+          
+          // Mark as animated
+          setAnimatedOnce(true);
+        }
+      }, 300); // Delay to ensure chart is rendered
+      
+      return () => clearTimeout(timer);
+    }
+  }, [chartType, animatedOnce]);
 
   // Format data for pie chart
   const formattedData = data.map(item => ({

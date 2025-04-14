@@ -22,6 +22,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import useLiveDashboardData from "@/hooks/useLiveDashboardData"
 import EcosystemAgentCard from "@/components/charts/EcosystemAgentCard"
+import { motion } from "framer-motion"
 
 // Define types for live data
 interface DeviceTypeData {
@@ -591,7 +592,7 @@ export default function Dashboard() {
       id: "0x55cD...247ee4",
       name: "ChargeMaster Flux",
       ticker: "FLUX",
-      category: "Entertainment",
+      category: "Optimization",
       marketCap: "1.67m",
       change24h: -9.54,
       volume24h: "201.1k",
@@ -631,7 +632,7 @@ export default function Dashboard() {
       id: "0xA4A2...3C6e00",
       name: "HydroPump Oracle",
       ticker: "HYDRA",
-      category: "On-chain",
+      category: "Optimization",
       marketCap: "621.98k",
       change24h: -10.6,
       volume24h: "150.53k",
@@ -645,7 +646,7 @@ export default function Dashboard() {
       id: "0xd017...782cd5",
       name: "SignalKeeper",
       ticker: "SIGNAL",
-      category: "Entertainment",
+      category: "Optimization",
       marketCap: "592.48k",
       change24h: -25.29,
       volume24h: "52.74k",
@@ -671,7 +672,7 @@ export default function Dashboard() {
       id: "0x6d5C...5bA83E",
       name: "GridWatcher",
       ticker: "GRID",
-      category: "Entertainment",
+      category: "Optimization",
       marketCap: "439.53k",
       change24h: -6.29,
       volume24h: "53.2",
@@ -691,12 +692,49 @@ export default function Dashboard() {
           <p className="text-slate-600 dark:text-slate-300 mt-1">Your autonomous agent swarm ecosystem</p>
         </div>
 
-        <TransitionLink href="/launch-agent">
-          <Button className="bg-violet-600 hover:bg-violet-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Deploy Agent
-          </Button>
-        </TransitionLink>
+        {/* Use a regular link as backup if TransitionLink fails in production */}
+        <div className="relative">
+          <TransitionLink href="/launch-agent">
+            <Button className="bg-violet-600 hover:bg-violet-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Deploy Agent
+            </Button>
+          </TransitionLink>
+          {/* Hidden backup link that will be shown via JS if TransitionLink fails */}
+          <a 
+            href="/launch-agent" 
+            className="hidden absolute inset-0" 
+            id="deploy-agent-backup"
+            onClick={(e) => {
+              console.log("Backup link clicked");
+            }}
+          >
+            <Button className="bg-violet-600 hover:bg-violet-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Deploy Agent
+            </Button>
+          </a>
+        </div>
+
+        {/* Add a script to ensure the button works */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          setTimeout(() => {
+            const backupLink = document.getElementById('deploy-agent-backup');
+            const mainLink = backupLink?.previousElementSibling;
+            
+            if (backupLink && mainLink) {
+              // Test if the main link is working by checking for event listeners
+              const hasListeners = (mainLink.__proto__.hasOwnProperty('_events') && 
+                                   Object.keys(mainLink._events || {}).length > 0);
+              
+              if (!hasListeners) {
+                console.log("TransitionLink seems broken, activating backup");
+                backupLink.style.display = 'block';
+                mainLink.style.display = 'none';
+              }
+            }
+          }, 1000);
+        `}} />
       </div>
 
       {showSuccess && (
@@ -952,16 +990,73 @@ export default function Dashboard() {
                     <h3 className="text-lg font-medium mb-4">Total Earnings by Device Type</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {deviceTypesData.map((device, index) => (
-                        <div key={device.type} className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center relative overflow-hidden">
-                          <div className="absolute bottom-0 left-0 w-full h-1 bg-opacity-30" style={{ backgroundColor: device.color }}></div>
-                          <div className="w-full h-1 absolute bottom-0 left-0" style={{ backgroundColor: device.color, width: `${device.percentage}%` }}></div>
-                          {device.type === 'solar-node' && <Sun className="h-8 w-8 mb-2" style={{ color: device.color }} />}
-                          {device.type === 'ev-charger' && <Plug className="h-8 w-8 mb-2" style={{ color: device.color }} />}
-                          {device.type === 'helium-miner' && <Radio className="h-8 w-8 mb-2" style={{ color: device.color }} />}
-                          <span className="font-bold text-xl">${parseFloat(device.revenue.toString()).toFixed(2)}</span>
-                          <span className="text-xs text-slate-500">{device.name}</span>
-                          <span className="text-xs mt-2 font-medium" style={{ color: device.color }}>{device.percentage}% of total</span>
-                        </div>
+                        <motion.div 
+                          key={device.type} 
+                          className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-lg flex flex-col items-center relative overflow-hidden"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ 
+                            duration: 0.6, 
+                            delay: index * 0.2,
+                            ease: [0.25, 0.46, 0.45, 0.94]
+                          }}
+                        >
+                          <motion.div 
+                            className="absolute bottom-0 left-0 w-full h-1 bg-opacity-30" 
+                            style={{ backgroundColor: device.color }}
+                          />
+                          <motion.div 
+                            className="w-full h-1 absolute bottom-0 left-0" 
+                            style={{ backgroundColor: device.color }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${device.percentage}%` }}
+                            transition={{ 
+                              duration: 1.5, 
+                              delay: 0.5 + (index * 0.2),
+                              ease: "easeOut"
+                            }}
+                          />
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ 
+                              duration: 0.5, 
+                              delay: 0.3 + (index * 0.2),
+                              type: "spring", 
+                              stiffness: 260, 
+                              damping: 20 
+                            }}
+                          >
+                            {device.type === 'solar-node' && <Sun className="h-8 w-8 mb-2" style={{ color: device.color }} />}
+                            {device.type === 'ev-charger' && <Plug className="h-8 w-8 mb-2" style={{ color: device.color }} />}
+                            {device.type === 'helium-miner' && <Radio className="h-8 w-8 mb-2" style={{ color: device.color }} />}
+                          </motion.div>
+                          <motion.span 
+                            className="font-bold text-xl"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.7 + (index * 0.2) }}
+                          >
+                            ${parseFloat(device.revenue.toString()).toFixed(2)}
+                          </motion.span>
+                          <motion.span 
+                            className="text-xs text-slate-500"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.8 + (index * 0.2) }}
+                          >
+                            {device.name}
+                          </motion.span>
+                          <motion.span 
+                            className="text-xs mt-2 font-medium" 
+                            style={{ color: device.color }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.9 + (index * 0.2) }}
+                          >
+                            {device.percentage}% of total
+                          </motion.span>
+                        </motion.div>
                       ))}
                     </div>
                   </Card>
@@ -1004,6 +1099,36 @@ export default function Dashboard() {
                         <p className="text-sm text-center text-slate-500 dark:text-slate-400 mt-2">Add to your autonomous swarm</p>
                       </div>
                     </TransitionLink>
+                    {/* Backup link for Deploy New Agent */}
+                    <a 
+                      href="/launch-agent" 
+                      className="hidden" 
+                      id="deploy-new-agent-backup"
+                    >
+                      <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-6 h-full flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-slate-800/70 transition-all">
+                        <div className="bg-violet-100 dark:bg-violet-900/40 p-3 rounded-full mb-4">
+                          <Plus className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                        </div>
+                        <h3 className="font-medium text-center">Deploy New Agent</h3>
+                        <p className="text-sm text-center text-slate-500 dark:text-slate-400 mt-2">Add to your autonomous swarm</p>
+                      </div>
+                    </a>
+                    {/* Script to check and enable backup if needed */}
+                    <script dangerouslySetInnerHTML={{ __html: `
+                      setTimeout(() => {
+                        const backupLink = document.getElementById('deploy-new-agent-backup');
+                        const mainLink = backupLink?.previousElementSibling;
+                        
+                        if (backupLink && mainLink) {
+                          if (!mainLink.__proto__.hasOwnProperty('_events') || 
+                              Object.keys(mainLink._events || {}).length === 0) {
+                            console.log("Agent tab TransitionLink seems broken, activating backup");
+                            backupLink.style.display = 'block';
+                            mainLink.style.display = 'none';
+                          }
+                        }
+                      }, 1200);
+                    `}} />
                   </div>
 
                   <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">

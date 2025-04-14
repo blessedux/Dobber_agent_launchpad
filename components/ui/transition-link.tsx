@@ -24,9 +24,19 @@ function TransitionLinkInner({
   onClick,
   ...props
 }: TransitionLinkProps) {
-  const { isTransitioning } = useTransition();
+  // Use try/catch to handle potential errors with the context
+  let isTransitioning = false;
+  try {
+    const transitionContext = useTransition();
+    isTransitioning = transitionContext?.isTransitioning || false;
+    console.log('TransitionLink to:', href, 'isTransitioning:', isTransitioning);
+  } catch (error) {
+    console.error('Error in TransitionLink context:', error);
+    // If context fails, continue without transition state
+  }
 
   const handleClick = (e: React.MouseEvent) => {
+    console.log('TransitionLink clicked:', href);
     if (onClick) {
       onClick(e);
     }
@@ -46,11 +56,29 @@ function TransitionLinkInner({
   );
 }
 
-// Exported component with Suspense boundary
+// Exported component with error boundary
 export const TransitionLink: React.FC<TransitionLinkProps> = (props) => {
-  return (
-    <Suspense fallback={<span className={props.className}>{props.children}</span>}>
-      <TransitionLinkInner {...props} />
-    </Suspense>
-  );
+  // Use error boundary to prevent breaking the app if transition context fails
+  try {
+    return (
+      <Suspense fallback={<span className={props.className}>{props.children}</span>}>
+        <TransitionLinkInner {...props} />
+      </Suspense>
+    );
+  } catch (error) {
+    console.error('TransitionLink fallback due to error:', error);
+    // Direct fallback to standard Link if the transition context breaks
+    return (
+      <Link 
+        href={props.href}
+        className={props.className}
+        onClick={props.onClick}
+        prefetch={props.prefetch}
+        replace={props.replace}
+        scroll={props.scroll}
+      >
+        {props.children}
+      </Link>
+    );
+  }
 }; 

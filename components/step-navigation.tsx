@@ -26,43 +26,6 @@ export default function StepNavigation({
   // Function to handle the final launch action
   const handleLaunchAgent = () => {
     // Here you would typically send the agent data to a backend
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
     console.log("Starting agent creation:", agentData)
     
     // Create a serialized version of the essential agent data
@@ -72,8 +35,27 @@ export default function StepNavigation({
       desc: agentData.agentDescription?.substring(0, 100) || "",
     }).toString()
     
-    // Redirect to the agent creation loading screen with agent data
-    router.push(`/creating-agent?${agentParams}`)
+    // Log the target URL for debugging
+    const targetUrl = `/creating-agent?${agentParams}`;
+    console.log("Redirecting to:", targetUrl);
+    
+    try {
+      // Redirect to the agent creation loading screen with agent data
+      // First try using router.push
+      router.push(targetUrl);
+      
+      // As a backup, also set a timeout to do a window.location redirect if router.push doesn't work
+      setTimeout(() => {
+        if (window.location.pathname !== '/creating-agent') {
+          console.log("Router navigation appears to have failed, using direct location redirect");
+          window.location.href = targetUrl;
+        }
+      }, 500);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to direct location change
+      window.location.href = targetUrl;
+    }
   }
 
   return (

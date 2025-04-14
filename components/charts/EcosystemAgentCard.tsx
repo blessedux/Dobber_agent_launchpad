@@ -68,10 +68,8 @@ export default function EcosystemAgentCard({ agents }: EcosystemAgentCardProps) 
     switch (category.toLowerCase()) {
       case 'productivity':
         return '#10b981'; // emerald
-      case 'entertainment':
-        return '#8b5cf6'; // violet
-      case 'on-chain':
-        return '#3b82f6'; // blue
+      case 'optimization':
+        return '#f59e0b'; // amber
       default:
         return '#6b7280'; // gray
     }
