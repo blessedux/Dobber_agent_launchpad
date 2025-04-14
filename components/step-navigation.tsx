@@ -35,55 +35,59 @@ export default function StepNavigation({
       desc: agentData.agentDescription?.substring(0, 100) || "",
     }).toString()
     
-    // Ensure paths start with a slash and create the full URL for production
+    // Create full URL
     const targetUrl = `/creating-agent?${agentParams}`;
     const fullTargetUrl = window.location.origin + targetUrl;
     
     console.log("Redirecting to:", targetUrl);
     console.log("Production full URL:", fullTargetUrl);
     
+    // Disable any auto-redirects by catching them
     try {
-      // Prevent any redirection middleware from interfering
-      // by storing a flag in session storage
+      // Store in session storage that we're intentionally launching an agent
       sessionStorage.setItem('launchingAgent', 'true');
       sessionStorage.setItem('launchTimestamp', Date.now().toString());
+      sessionStorage.setItem('noRedirect', 'true');
       
-      // For all environments, use a consistent direct approach to avoid unwanted redirects
-      console.log("Using direct navigation to creating-agent page");
-        
-      // Create a form and submit it to avoid some redirection issues
-      const form = document.createElement('form');
-      form.method = 'GET';
-      form.action = fullTargetUrl; // Use full URL to ensure correct navigation
-      form.style.display = 'none';
+      // Force a direct navigation with no router involved at all
+      console.log("Using direct document.location navigation");
       
-      // Add the parameters as hidden inputs
-      Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
-      });
+      // The most direct and forceful way to navigate in browsers
+      // This completely bypasses Next.js router and any middleware
+      document.location.href = fullTargetUrl;
       
-      // Add the form to the document and submit it
-      document.body.appendChild(form);
-      
-      // Set a timeout to ensure everything is ready before submission
+      // If that doesn't work for some reason, try other approaches
       setTimeout(() => {
-        console.log("Submitting form to navigate to creating-agent page");
+        console.log("Primary navigation approach failed, trying alternatives");
+        
+        // Try a basic form submission
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = fullTargetUrl;
+        form.target = '_self'; // Load in the same window
+        
+        // Add parameters
+        Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        });
+        
+        // Add and submit
+        document.body.appendChild(form);
         form.submit();
         
-        // Fallback direct navigation
+        // Last resort - window.location
         setTimeout(() => {
-          console.log("Fallback navigation if form submission fails");
           window.location.href = fullTargetUrl;
-        }, 200);
-      }, 100);
+        }, 100);
+      }, 200);
     } catch (error) {
       console.error("Navigation error:", error);
-      // Fallback to direct location change
-      window.location.href = fullTargetUrl;
+      // Ultimate fallback - open in a new tab
+      window.open(fullTargetUrl, '_self');
     }
   }
 

@@ -13,10 +13,33 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Check for the noRedirect flag - this is used to temporarily disable redirects
+    // when deliberately navigating to the agent creation flow
+    const noRedirect = typeof window !== 'undefined' && sessionStorage.getItem('noRedirect');
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    
+    // Only redirect to home if:
+    // 1. Authentication check is done (not loading)
+    // 2. User is not authenticated
+    // 3. There's no explicit noRedirect flag
+    // 4. We're not in a special flow that should bypass auth (like creating-agent)
+    if (!isLoading && !isAuthenticated && !noRedirect && 
+        !currentPath.includes('creating-agent')) {
+      console.log('Not authenticated, redirecting to home');
       router.push("/");
     }
+    
+    // Clear the noRedirect flag after using it (so it doesn't persist)
+    if (noRedirect && typeof window !== 'undefined') {
+      console.log('Clearing noRedirect flag');
+      sessionStorage.removeItem('noRedirect');
+    }
   }, [isAuthenticated, isLoading, router]);
+
+  // For the creating-agent page, bypass the auth check completely
+  if (typeof window !== 'undefined' && window.location.pathname.includes('creating-agent')) {
+    return <>{children}</>;
+  }
 
   // Show loading state or nothing while checking authentication
   if (isLoading || !isAuthenticated) {
