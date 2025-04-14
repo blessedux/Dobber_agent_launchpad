@@ -48,48 +48,38 @@ export default function StepNavigation({
       sessionStorage.setItem('launchingAgent', 'true');
       sessionStorage.setItem('launchTimestamp', Date.now().toString());
       
-      // For production, use a direct location change which is more reliable
-      if (process.env.NODE_ENV === 'production') {
-        console.log("Using direct location navigation in production");
+      // For all environments, use a consistent direct approach to avoid unwanted redirects
+      console.log("Using direct navigation to creating-agent page");
         
-        // Create a hidden form and submit it (avoids some redirection issues)
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = targetUrl;
-        form.style.display = 'none';
-        
-        // Add the parameters as hidden inputs
-        Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = value;
-          form.appendChild(input);
-        });
-        
-        // Add the form to the document and submit it
-        document.body.appendChild(form);
+      // Create a form and submit it to avoid some redirection issues
+      const form = document.createElement('form');
+      form.method = 'GET';
+      form.action = fullTargetUrl; // Use full URL to ensure correct navigation
+      form.style.display = 'none';
+      
+      // Add the parameters as hidden inputs
+      Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+      
+      // Add the form to the document and submit it
+      document.body.appendChild(form);
+      
+      // Set a timeout to ensure everything is ready before submission
+      setTimeout(() => {
+        console.log("Submitting form to navigate to creating-agent page");
         form.submit();
         
-        // Alternative direct navigation as fallback
+        // Fallback direct navigation
         setTimeout(() => {
+          console.log("Fallback navigation if form submission fails");
           window.location.href = fullTargetUrl;
-        }, 100);
-        
-        return;
-      }
-      
-      // In development, try router.push first
-      router.push(targetUrl);
-      
-      // As a backup, also set a timeout to do a window.location redirect if router.push doesn't work
-      setTimeout(() => {
-        // Check if we're still on the current page
-        if (window.location.pathname !== '/creating-agent') {
-          console.log("Router navigation appears to have failed, using direct location redirect");
-          window.location.href = fullTargetUrl;
-        }
-      }, 300);
+        }, 200);
+      }, 100);
     } catch (error) {
       console.error("Navigation error:", error);
       // Fallback to direct location change

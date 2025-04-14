@@ -92,6 +92,91 @@ export default function CreatingAgentPage() {
     { id: 4, label: "Launching agent", icon: Rocket },
   ]
 
+  // Prevent unwanted redirects when we're already on this page
+  useEffect(() => {
+    // Check if there's a service worker that might be causing the redirect
+    const checkRedirects = () => {
+      // Create a MutationObserver to detect meta refreshes or JS redirects
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.type === 'childList') {
+            // Check for meta refresh tags
+            const metaRefreshes = document.querySelectorAll('meta[http-equiv="refresh"]');
+            if (metaRefreshes.length > 0) {
+              console.log('Found meta refresh tag, removing it');
+              metaRefreshes.forEach(node => node.remove());
+            }
+          }
+        }
+      });
+      
+      // Start observing the document head for redirects
+      observer.observe(document.head, { 
+        childList: true,
+        subtree: true 
+      });
+      
+      // Prevent any programmatic redirects by overriding window.location methods
+      const originalAssign = window.location.assign;
+      const originalReplace = window.location.replace;
+      const originalHref = Object.getOwnPropertyDescriptor(window.location, 'href');
+      
+      // Override assign
+      window.location.assign = function(url: string) {
+        if (url === '/' || url.startsWith('/dashboard')) {
+          if (!isRedirecting) {
+            console.log('Blocked unwanted location.assign redirect to:', url);
+            return;
+          }
+        }
+        return originalAssign.apply(this, [url]);
+      };
+      
+      // Override replace
+      window.location.replace = function(url: string) {
+        if (url === '/' || url.startsWith('/dashboard')) {
+          if (!isRedirecting) {
+            console.log('Blocked unwanted location.replace redirect to:', url);
+            return;
+          }
+        }
+        return originalReplace.apply(this, [url]);
+      };
+      
+      // Override href setter if it's configurable
+      if (originalHref && originalHref.configurable) {
+        Object.defineProperty(window.location, 'href', {
+          get: originalHref.get,
+          set: function(url) {
+            if (url === '/' || url.startsWith('/dashboard')) {
+              if (!isRedirecting) {
+                console.log('Blocked unwanted location.href redirect to:', url);
+                return;
+              }
+            }
+            return originalHref.set?.call(this, url);
+          },
+          configurable: true
+        });
+      }
+      
+      return () => {
+        observer.disconnect();
+        window.location.assign = originalAssign;
+        window.location.replace = originalReplace;
+        if (originalHref && originalHref.configurable) {
+          Object.defineProperty(window.location, 'href', originalHref);
+        }
+      };
+    };
+    
+    const cleanup = checkRedirects();
+    
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [isRedirecting]);
+
   // Effect to handle the actual agent creation steps
   useEffect(() => {
     // Only start the process if this is a valid navigation
@@ -127,26 +212,35 @@ export default function CreatingAgentPage() {
         
         // Redirect to dashboard after a slight delay with the agent data
         setTimeout(() => {
-          if (process.env.NODE_ENV === 'production') {
-            console.log('Using direct location redirect in production');
-            
-            // Set a flag for the dashboard to know this is a valid redirect
-            sessionStorage.setItem('agentCompleted', 'true');
-            sessionStorage.setItem('completionTimestamp', Date.now().toString());
-            
+          // Set a flag for the dashboard to know this is a valid redirect
+          sessionStorage.setItem('agentCompleted', 'true');
+          sessionStorage.setItem('completionTimestamp', Date.now().toString());
+          
+          console.log('Using form submission to navigate to dashboard');
+          
+          // Use a form submission to navigate to avoid redirect issues
+          const form = document.createElement('form');
+          form.method = 'GET';
+          form.action = fullDashboardUrl;
+          form.style.display = 'none';
+          
+          // Add the parameters as hidden inputs
+          Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+          });
+          
+          // Add the form to the document and submit it
+          document.body.appendChild(form);
+          form.submit();
+          
+          // Fallback direct navigation if form submission fails
+          setTimeout(() => {
             window.location.href = fullDashboardUrl;
-          } else {
-            console.log('Using router.push in development');
-            router.push(dashboardUrl);
-            
-            // Fallback direct navigation if router fails
-            setTimeout(() => {
-              if (window.location.pathname !== '/dashboard') {
-                console.log('Router navigation failed, using direct redirect');
-                window.location.href = fullDashboardUrl;
-              }
-            }, 300);
-          }
+          }, 200);
         }, 1000) // Delay after completion animation
       }
     }, 600) // Time between steps

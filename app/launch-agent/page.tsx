@@ -10,59 +10,69 @@ export default function LaunchAgentPage() {
     console.log('Launch Agent Page loaded at:', window.location.pathname);
     console.log('Current URL:', window.location.href);
     
-    // Detect and log any navigation attempts
+    // Detect and PREVENT unwanted navigation attempts
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
     
     history.pushState = function(...args: any[]) {
       console.log('history.pushState called with:', args);
-      // If this is a redirect back to home, log it specially
+      // If this is a redirect back to home or dashboard, BLOCK it unless explicitly triggered
       if (args[2] && typeof args[2] === 'string' && 
           (args[2] === '/' || args[2].startsWith('/dashboard'))) {
-        console.error('DETECTED UNWANTED REDIRECT TO:', args[2]);
-        // Allow the user to see what's happening by forcing a delay
-        alert('Unwanted redirect detected. Check console for details.');
+        console.error('BLOCKING UNWANTED REDIRECT TO:', args[2]);
+        // Only block if not coming from legitimate agent creation
+        const isValidRedirect = sessionStorage.getItem('agentCompleted');
+        if (!isValidRedirect) {
+          console.log('Navigation prevented - not from agent creation flow');
+          return null; // Block the navigation
+        }
       }
       return originalPushState.apply(history, args as any);
     };
     
     history.replaceState = function(...args: any[]) {
       console.log('history.replaceState called with:', args);
-      // If this is a redirect back to home, log it specially
+      // If this is a redirect back to home or dashboard, BLOCK it unless explicitly triggered
       if (args[2] && typeof args[2] === 'string' && 
           (args[2] === '/' || args[2].startsWith('/dashboard'))) {
-        console.error('DETECTED UNWANTED REDIRECT TO:', args[2]);
+        console.error('BLOCKING UNWANTED REDIRECT TO:', args[2]);
+        // Only block if not coming from legitimate agent creation
+        const isValidRedirect = sessionStorage.getItem('agentCompleted');
+        if (!isValidRedirect) {
+          console.log('Navigation prevented - not from agent creation flow');
+          return null; // Block the navigation
+        }
       }
       return originalReplaceState.apply(history, args as any);
     };
     
-    // Also track navigation events
+    // Block direct navigation away
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Only allow navigation if we're going to creating-agent or if it's a legitimate dashboard redirect
+      const isLaunchingAgent = sessionStorage.getItem('launchingAgent');
+      const isAgentCompleted = sessionStorage.getItem('agentCompleted');
+      
+      if (!isLaunchingAgent && !isAgentCompleted) {
+        console.log('Blocking navigation away from launch-agent page');
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      }
+    };
+    
+    // Track all navigation events
     const handlePopState = () => {
       console.log('popstate event fired', window.location.pathname);
     };
     
     window.addEventListener('popstate', handlePopState);
-    
-    // Prevent automatic redirects that might be happening
-    const preventUnload = (e: BeforeUnloadEvent) => {
-      console.log('beforeunload event triggered');
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
-    };
-    
-    // Only add this in development for debugging
-    if (process.env.NODE_ENV !== 'production') {
-      window.addEventListener('beforeunload', preventUnload);
-    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
     
     return () => {
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
       window.removeEventListener('popstate', handlePopState);
-      if (process.env.NODE_ENV !== 'production') {
-        window.removeEventListener('beforeunload', preventUnload);
-      }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
   
