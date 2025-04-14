@@ -3,6 +3,8 @@
 import React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import PerformancePanel from "@/components/PerformancePanel"
+import { Card } from "@/components/ui/card"
+import ActionHistoryPanel from "@/components/ActionHistoryPanel"
 
 export default function DobberDashboard() {
   return (
@@ -32,8 +34,18 @@ export default function DobberDashboard() {
           </div>
         </TabsContent>
         <TabsContent value="agents" className="py-4">
-          <div className="rounded-lg border p-8 text-center">
-            Agent management interface coming soon
+          <div className="grid grid-cols-1 gap-6">
+            <Card className="p-4">
+              <h3 className="text-xl font-semibold mb-4">Agent Status</h3>
+              <div className="flex flex-col gap-4">
+                <PerformancePanel showAgentStatusOnly={true} />
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <h3 className="text-xl font-semibold mb-4">Agent Action History</h3>
+              <ActionHistoryPanel />
+            </Card>
           </div>
         </TabsContent>
         <TabsContent value="settings" className="py-4">

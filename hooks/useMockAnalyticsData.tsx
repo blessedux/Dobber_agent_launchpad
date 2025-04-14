@@ -36,18 +36,25 @@ interface Costs {
 
 interface DashboardData {
   performance: {
-    uptime: number;
+    uptime: number | string;
     todaysActions: number;
-    profitLoss: number;
+    profitLoss: number | string;
     agentsOnline: number;
     activeDevices: number;
   };
-  earnings: Earnings;
+  earnings: {
+    totalEarnings: number | string;
+    totalEarningsToday: number | string;
+    weekly: number[];
+    monthlyProjection: number | string;
+  };
   revenueDistribution: RevenueDistribution;
   agents: Agent[];
   actionsToday: Action[];
   deviceLogs: Device[];
-  costs: Costs;
+  costs: {
+    operatingToday: number | string;
+  };
 }
 
 interface ProcessedMetrics {
@@ -60,8 +67,23 @@ interface ProcessedMetrics {
     earnings: Earnings;
     revenueDistribution: RevenueDistribution;
     agentHistory: Agent[];
+    actionsToday: Action[];
   };
 }
+
+// Helper function to safely parse numbers
+const safeParseFloat = (value: any): number => {
+  if (value === null || value === undefined) return 0;
+  
+  if (typeof value === 'number') return value;
+  
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  
+  return 0;
+};
 
 export function useMockAnalyticsData(refreshInterval = 5000) {
   const [data, setData] = useState<ProcessedMetrics | null>(null);
@@ -83,37 +105,37 @@ export function useMockAnalyticsData(refreshInterval = 5000) {
         const json: DashboardData = await res.json();
         
         if (isMounted) {
-          // Process the data
+          // Process the data with safe parsing
           const processedData: ProcessedMetrics = {
             // Direct metrics from performance object
-            uptime: typeof json.performance.uptime === 'string' 
-              ? parseFloat(json.performance.uptime) 
-              : json.performance.uptime,
-            todaysActions: json.performance.todaysActions,
-            profitLoss: typeof json.performance.profitLoss === 'string' 
-              ? parseFloat(json.performance.profitLoss) 
-              : json.performance.profitLoss,
-            agentsOnline: json.performance.agentsOnline,
-            activeDevices: json.performance.activeDevices,
+            uptime: safeParseFloat(json.performance.uptime),
+            todaysActions: json.performance.todaysActions || 0,
+            profitLoss: safeParseFloat(json.performance.profitLoss),
+            agentsOnline: json.performance.agentsOnline || 0,
+            activeDevices: json.performance.activeDevices || 0,
             
             // Raw data for charts and detailed components
             rawData: {
               earnings: {
-                ...json.earnings,
-                totalEarnings: typeof json.earnings.totalEarnings === 'string' 
-                  ? parseFloat(json.earnings.totalEarnings) 
-                  : json.earnings.totalEarnings,
-                totalEarningsToday: typeof json.earnings.totalEarningsToday === 'string' 
-                  ? parseFloat(json.earnings.totalEarningsToday) 
-                  : json.earnings.totalEarningsToday,
-                monthlyProjection: typeof json.earnings.monthlyProjection === 'string' 
-                  ? parseFloat(json.earnings.monthlyProjection) 
-                  : json.earnings.monthlyProjection
+                totalEarnings: safeParseFloat(json.earnings.totalEarnings),
+                totalEarningsToday: safeParseFloat(json.earnings.totalEarningsToday),
+                weekly: Array.isArray(json.earnings.weekly) ? 
+                  json.earnings.weekly.map(value => typeof value === 'number' ? value : safeParseFloat(value)) : 
+                  [0, 0, 0, 0, 0, 0, 0],
+                monthlyProjection: safeParseFloat(json.earnings.monthlyProjection)
               },
-              revenueDistribution: json.revenueDistribution,
-              agentHistory: json.agents
+              revenueDistribution: {
+                treasury: safeParseFloat(json.revenueDistribution.treasury),
+                liquidityPools: safeParseFloat(json.revenueDistribution.liquidityPools),
+                operatorYield: safeParseFloat(json.revenueDistribution.operatorYield)
+              },
+              agentHistory: json.agents || [],
+              actionsToday: json.actionsToday || []
             }
           };
+          
+          // Log for debugging
+          console.log('Processed data:', processedData);
           
           setData(processedData);
           setLoading(false);

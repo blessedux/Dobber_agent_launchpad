@@ -11,7 +11,7 @@ import DecisionLogViewer from "@/components/decision-log-viewer"
 import DeviceHealthPanel from "@/components/device-health-panel"
 import EmptyDashboard from "@/components/empty-dashboard"
 import LoadingSpinner from "@/components/loading-spinner"
-import { Plus, ArrowRight, BarChart2, Clock, ActivitySquare, Network, Sun, Plug, Radio, PieChart, DollarSign } from "lucide-react"
+import { Plus, ArrowRight, BarChart2, Clock, ActivitySquare, Network, Sun, Plug, Radio, PieChart, DollarSign, Activity } from "lucide-react"
 import { LineChart as LineChartIcon } from "lucide-react"
 import { TransitionLink } from "@/components/ui/transition-link"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -57,7 +57,7 @@ type AgentDeviceType = 'solar-node' | 'ev-charger' | 'helium-miner' | 'compute-n
 const userHasAgents = true
 
 export default function Dashboard() {
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams() || null;
   const [showSuccess, setShowSuccess] = useState(false)
   const [selectedTab, setSelectedTab] = useState("analytics")
   const [agents, setAgents] = useState([
@@ -98,7 +98,7 @@ export default function Dashboard() {
   
   useEffect(() => {
     // Check if agent was just created
-    if (searchParams.get('agentCreated') === 'true') {
+    if (searchParams && searchParams.get('agentCreated') === 'true') {
       setShowSuccess(true)
       // Don't change the selected tab when agent is created
       // setSelectedTab("agents") // Ensure "agents" tab is selected
@@ -733,7 +733,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-4xl font-bold text-slate-800 dark:text-slate-100">${totalRevenue.toFixed(2)}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">From {liveData?.devices?.total || agents.length} devices</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">From {agents.length} devices</p>
                 </div>
                 <div className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 px-2 py-1 rounded-full">
                   +{weeklyGrowth}% growth rate
@@ -922,10 +922,10 @@ export default function Dashboard() {
                           <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                             <p className="text-sm text-slate-600 dark:text-slate-300">Average Uptime</p>
                             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                              {liveData 
-                                ? (parseFloat(liveData.deviceTypes[0].uptime) + 
-                                   parseFloat(liveData.deviceTypes[1].uptime) + 
-                                   parseFloat(liveData.deviceTypes[2].uptime)) / 3
+                              {liveData && liveData.deviceTypes 
+                                ? (parseFloat(liveData.deviceTypes[0]?.uptime || "0") + 
+                                   parseFloat(liveData.deviceTypes[1]?.uptime || "0") + 
+                                   parseFloat(liveData.deviceTypes[2]?.uptime || "0")) / 3
                                 : "96.5"}%
                             </p>
                           </div>
@@ -1005,6 +1005,38 @@ export default function Dashboard() {
                       </div>
                     </TransitionLink>
                   </div>
+
+                  <Card className="p-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70">
+                    <h3 className="text-xl font-semibold mb-4">Agent Action History</h3>
+                    {liveData?.agentActivity && liveData.agentActivity.length > 0 ? (
+                      <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                        {liveData.agentActivity.map((activity, index) => (
+                          <div 
+                            key={`${activity.agent}-${index}`}
+                            className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg flex items-start gap-3"
+                          >
+                            <div className="p-2 rounded-full bg-violet-100 dark:bg-violet-900/30 flex-shrink-0">
+                              <Activity className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="font-medium truncate">{activity.agent}</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 text-sm whitespace-nowrap">{activity.revenue}</span>
+                              </div>
+                              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{activity.action}</p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {new Date(activity.timestamp).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center p-6 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
+                        <p className="text-slate-500 dark:text-slate-400">No recent agent activity recorded</p>
+                      </div>
+                    )}
+                  </Card>
                 </Suspense>
               </TabsContent>
               
