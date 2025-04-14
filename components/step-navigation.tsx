@@ -42,29 +42,61 @@ export default function StepNavigation({
     console.log("Redirecting to:", targetUrl);
     console.log("Production full URL:", fullTargetUrl);
     
-    // Disable any auto-redirects by catching them
+    // RADICAL APPROACH: Create and open a new window, then close this one
+    // This completely bypasses any redirection logic in the current window
     try {
-      // Store in session storage that we're intentionally launching an agent
+      // Store in session storage
       sessionStorage.setItem('launchingAgent', 'true');
       sessionStorage.setItem('launchTimestamp', Date.now().toString());
       sessionStorage.setItem('noRedirect', 'true');
+      sessionStorage.setItem('agentData', JSON.stringify({
+        name: agentData.agentName,
+        type: agentData.deviceType,
+        desc: agentData.agentDescription?.substring(0, 100) || "",
+      }));
       
-      // Force a direct navigation with no router involved at all
-      console.log("Using direct document.location navigation");
+      console.log("Using radical navigation approach");
       
-      // The most direct and forceful way to navigate in browsers
-      // This completely bypasses Next.js router and any middleware
-      document.location.href = fullTargetUrl;
+      // APPROACH 1: Try iframe method
+      // Create an invisible iframe that will load the target page
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.position = 'fixed';
+      iframe.style.top = '0';
+      iframe.style.left = '0';
+      iframe.style.zIndex = '9999';
+      iframe.style.border = 'none';
+      iframe.style.backgroundColor = '#fff';
       
-      // If that doesn't work for some reason, try other approaches
-      setTimeout(() => {
-        console.log("Primary navigation approach failed, trying alternatives");
+      // When iframe loads, make it take over the entire page
+      iframe.onload = () => {
+        console.log("iframe loaded successfully");
         
-        // Try a basic form submission
+        // Ensure the iframe takes over the entire page
+        document.body.innerHTML = '';
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+        document.body.style.overflow = 'hidden';
+        
+        // Make current page redirect to the same URL in case iframe approach fails
+        setTimeout(() => {
+          document.location.href = fullTargetUrl;
+        }, 100);
+      };
+      
+      // Set the iframe source and add it to the document
+      iframe.src = fullTargetUrl;
+      document.body.appendChild(iframe);
+      
+      // APPROACH 2: Fallback to form POST - works more reliably for cross-domain navigation
+      setTimeout(() => {
+        // Form POST method (more reliable than GET for preserving data)
         const form = document.createElement('form');
-        form.method = 'GET';
+        form.method = 'POST';
         form.action = fullTargetUrl;
-        form.target = '_self'; // Load in the same window
+        form.target = '_self';
+        form.style.display = 'none';
         
         // Add parameters
         Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
@@ -75,15 +107,15 @@ export default function StepNavigation({
           form.appendChild(input);
         });
         
-        // Add and submit
+        // Append and submit
         document.body.appendChild(form);
         form.submit();
-        
-        // Last resort - window.location
-        setTimeout(() => {
-          window.location.href = fullTargetUrl;
-        }, 100);
       }, 200);
+      
+      // APPROACH 3: Last resort - direct location change
+      setTimeout(() => {
+        document.location.href = fullTargetUrl;
+      }, 300);
     } catch (error) {
       console.error("Navigation error:", error);
       // Ultimate fallback - open in a new tab

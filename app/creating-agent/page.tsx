@@ -6,6 +6,14 @@ import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { ServerCog, Cpu, Upload, Rocket, Database, CheckCircle2 } from "lucide-react"
 
+// Add custom type definition for Window with our property
+declare global {
+  interface Window {
+    __isLocationOverridden?: boolean;
+    __usingStoredAgentData?: boolean;
+  }
+}
+
 export default function CreatingAgentPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -14,6 +22,103 @@ export default function CreatingAgentPage() {
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [isValidNavigation, setIsValidNavigation] = useState(false)
   
+  // Define steps
+  const steps = [
+    { id: 0, label: "Initializing agent", icon: Cpu },
+    { id: 1, label: "Setting up device connection", icon: ServerCog },
+    { id: 2, label: "Configuring on-chain logic", icon: Database },
+    { id: 3, label: "Uploading to DOB network", icon: Upload },
+    { id: 4, label: "Launching agent", icon: Rocket },
+  ]
+  
+  // CRITICAL: Block any unwanted redirects IMMEDIATELY when the component renders
+  // This must be the first useEffect to run
+  useEffect(() => {
+    // Install aggressive redirect blocking as the first thing we do
+    if (typeof window !== 'undefined') {
+      console.log('Installing AGGRESSIVE redirect blocking');
+      
+      // Create a copy of the important location methods
+      const originalLocation = {
+        href: window.location.href,
+        assign: window.location.assign,
+        replace: window.location.replace,
+        reload: window.location.reload,
+      };
+      
+      // Save the current URL
+      const currentUrl = window.location.href;
+      const isLaunchFlow = true; // Always assume we're in the launch flow on this page
+      
+      // If we don't yet have the override, create it
+      if (!window.__isLocationOverridden) {
+        console.log('Replacing window.location object to prevent redirects');
+        
+        // Create a completely new location object
+        const newLocation = {
+          ...window.location,
+          
+          // Override the href setter to detect unwanted redirects
+          set href(url: string) {
+            console.log(`location.href setter called with: ${url}`);
+            if (isLaunchFlow && (url === '/' || url.startsWith('/dashboard'))) {
+              console.error(`BLOCKED navigation to: ${url}`);
+              return;
+            }
+            originalLocation.href = url;
+          },
+          
+          // Override methods that can cause navigation
+          assign: function(url: string) {
+            console.log(`location.assign called with: ${url}`);
+            if (isLaunchFlow && (url === '/' || url.startsWith('/dashboard'))) {
+              console.error(`BLOCKED navigation to: ${url}`);
+              return;
+            }
+            return originalLocation.assign.call(this, url);
+          },
+          
+          replace: function(url: string) {
+            console.log(`location.replace called with: ${url}`);
+            if (isLaunchFlow && (url === '/' || url.startsWith('/dashboard'))) {
+              console.error(`BLOCKED navigation to: ${url}`);
+              return;
+            }
+            return originalLocation.replace.call(this, url);
+          },
+          
+          reload: function() {
+            console.log('location.reload called');
+            return originalLocation.reload.call(this);
+          }
+        };
+        
+        // Replace the entire window.location object
+        try {
+          // First try direct replacement (works in most browsers)
+          // @ts-ignore - TypeScript doesn't like reassigning location
+          window.location = newLocation;
+        } catch (error) {
+          console.error('Direct location replacement failed, trying Object.defineProperty');
+          
+          // If direct replacement fails, try with defineProperty
+          try {
+            Object.defineProperty(window, 'location', {
+              value: newLocation,
+              writable: false,
+              configurable: false
+            });
+          } catch (innerError) {
+            console.error('Failed to override window.location:', innerError);
+          }
+        }
+        
+        // Mark that we've overridden it
+        window.__isLocationOverridden = true;
+      }
+    }
+  }, []);
+
   // Verify that this is a valid navigation and not an unwanted redirect
   useEffect(() => {
     const isLaunchingAgent = sessionStorage.getItem('launchingAgent');
@@ -53,44 +158,67 @@ export default function CreatingAgentPage() {
         console.warn('No valid parameters or launch flag - this might be an unwanted redirect');
       }
     }
-    
-    // Debug any potential automatic redirects
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-    
-    history.pushState = function(...args: any[]) {
-      console.log('history.pushState called with:', args);
-      return originalPushState.apply(history, args as any);
-    };
-    
-    history.replaceState = function(...args: any[]) {
-      console.log('history.replaceState called with:', args);
-      return originalReplaceState.apply(history, args as any);
-    };
-    
-    // Also track navigation events
-    window.addEventListener('popstate', () => {
-      console.log('popstate event fired', window.location.pathname);
-    });
-    
-    return () => {
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-    };
   }, [searchParams, isValidNavigation]);
+  
+  // Try to read agent data from sessionStorage if URL params are missing
+  useEffect(() => {
+    if (!isValidNavigation && typeof window !== 'undefined') {
+      try {
+        // Check if we have agent data in session storage
+        const storedAgentData = sessionStorage.getItem('agentData');
+        if (storedAgentData) {
+          console.log('Found agent data in sessionStorage');
+          const parsedData = JSON.parse(storedAgentData);
+          
+          // If we have valid data, consider this a valid navigation
+          if (parsedData && parsedData.name && parsedData.type) {
+            console.log('Valid agent data found in sessionStorage');
+            setIsValidNavigation(true);
+            
+            // We don't need to update the URL - we'll just use the stored data
+            // But we mark that we're using storage data
+            window.__usingStoredAgentData = true;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing stored agent data:', error);
+      }
+    }
+  }, [isValidNavigation]);
+  
+  // A more aggressive block for the entire page
+  useEffect(() => {
+    // If we somehow still get redirected and end up on the home page, go back to creating-agent
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      console.log('Detected we ended up on homepage, redirecting back');
+      
+      // Try to get stored agent data
+      try {
+        const storedAgentData = sessionStorage.getItem('agentData');
+        if (storedAgentData) {
+          const parsedData = JSON.parse(storedAgentData);
+          if (parsedData && parsedData.name && parsedData.type) {
+            const params = new URLSearchParams({
+              name: parsedData.name,
+              type: parsedData.type,
+              desc: parsedData.desc || '',
+            }).toString();
+            
+            // Force navigation back
+            const creatingUrl = `/creating-agent?${params}`;
+            window.location.href = window.location.origin + creatingUrl;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to recover:', error);
+      }
+    }
+  }, []);
   
   // Get agent data from query params
   const agentName = searchParams?.get('name') || "AgentBot"
   const deviceType = searchParams?.get('type') || "compute-node"
   const agentDescription = searchParams?.get('desc') || ""
-  
-  const steps = [
-    { id: 0, label: "Initializing agent", icon: Cpu },
-    { id: 1, label: "Setting up device connection", icon: ServerCog },
-    { id: 2, label: "Configuring on-chain logic", icon: Database },
-    { id: 3, label: "Uploading to DOB network", icon: Upload },
-    { id: 4, label: "Launching agent", icon: Rocket },
-  ]
 
   // Prevent unwanted redirects when we're already on this page
   useEffect(() => {
@@ -280,11 +408,14 @@ export default function CreatingAgentPage() {
     <main className="container flex flex-col items-center justify-center min-h-screen px-4 py-8">
       {/* Add a debug info for troubleshooting */}
       <div className="absolute top-2 right-2 text-xs text-slate-400 bg-slate-800/40 p-2 rounded">
+        <div className="text-xs font-bold text-emerald-400 mb-1">⚡ REDIRECT PROTECTION ACTIVE ⚡</div>
         Path: {typeof window !== 'undefined' ? window.location.pathname : 'unknown'}<br/>
         Step: {currentStep + 1}/{steps.length}<br/>
         Completed: {completed ? 'Yes' : 'No'}<br/>
         Redirecting: {isRedirecting ? 'Yes' : 'No'}<br/>
-        Valid Navigation: {isValidNavigation ? 'Yes' : 'No'}
+        Valid Navigation: {isValidNavigation ? 'Yes' : 'No'}<br/>
+        Override Active: {typeof window !== 'undefined' && window.__isLocationOverridden ? 'Yes' : 'No'}<br/>
+        Using Stored Data: {typeof window !== 'undefined' && (window as any).__usingStoredAgentData ? 'Yes' : 'No'}
       </div>
       
       {!isValidNavigation ? (
