@@ -3,6 +3,12 @@ import { Suspense } from "react"
 import LoadingSpinner from "@/components/loading-spinner"
 
 export default function LaunchAgentPage() {
+  // Add console log for debugging in production
+  if (typeof window !== 'undefined') {
+    console.log('Launch Agent Page loaded at:', window.location.pathname);
+    console.log('Current URL:', window.location.href);
+  }
+  
   return (
     <main className="container px-4 py-8 md:py-12">
       <h1 className="text-3xl md:text-4xl font-bold text-center mb-2 text-slate-800 dark:text-slate-100">

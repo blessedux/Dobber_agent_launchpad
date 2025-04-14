@@ -12,10 +12,20 @@ export default function CreatingAgentPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [completed, setCompleted] = useState(false)
   
+  // Add console log for debugging in production
+  useEffect(() => {
+    console.log('Creating Agent Page loaded');
+    if (searchParams) {
+      console.log('URL Parameters:', Object.fromEntries([...searchParams.entries()]));
+    } else {
+      console.log('No URL parameters found');
+    }
+  }, [searchParams]);
+  
   // Get agent data from query params
-  const agentName = searchParams.get('name') || "AgentBot"
-  const deviceType = searchParams.get('type') || "compute-node"
-  const agentDescription = searchParams.get('desc') || ""
+  const agentName = searchParams?.get('name') || "AgentBot"
+  const deviceType = searchParams?.get('type') || "compute-node"
+  const agentDescription = searchParams?.get('desc') || ""
   
   const steps = [
     { id: 0, label: "Initializing agent", icon: Cpu },
@@ -42,15 +52,33 @@ export default function CreatingAgentPage() {
           desc: agentDescription
         }).toString()
         
+        // For production, use window.location for more reliable navigation
+        const dashboardUrl = `/dashboard?${agentParams}`;
+        const fullDashboardUrl = window.location.origin + dashboardUrl;
+        
+        console.log('Redirecting to dashboard with params:', dashboardUrl);
+        
         // Redirect to dashboard after a slight delay with the agent data
         setTimeout(() => {
-          router.push(`/dashboard?${agentParams}`)
+          if (process.env.NODE_ENV === 'production') {
+            window.location.href = fullDashboardUrl;
+          } else {
+            router.push(dashboardUrl);
+            
+            // Fallback direct navigation if router fails
+            setTimeout(() => {
+              if (window.location.pathname !== '/dashboard') {
+                console.log('Router navigation failed, using direct redirect');
+                window.location.href = fullDashboardUrl;
+              }
+            }, 300);
+          }
         }, 1000) // Delay after completion animation
       }
     }, 600) // Time between steps
     
     return () => clearInterval(interval)
-  }, [currentStep, completed, router, agentName, deviceType, agentDescription])
+  }, [currentStep, completed, router, agentName, deviceType, agentDescription, steps.length])
 
   return (
     <main className="container flex flex-col items-center justify-center min-h-screen px-4 py-8">

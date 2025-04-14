@@ -35,26 +35,36 @@ export default function StepNavigation({
       desc: agentData.agentDescription?.substring(0, 100) || "",
     }).toString()
     
-    // Log the target URL for debugging
+    // Ensure paths start with a slash and create the full URL for production
     const targetUrl = `/creating-agent?${agentParams}`;
+    const fullTargetUrl = window.location.origin + targetUrl;
+    
     console.log("Redirecting to:", targetUrl);
+    console.log("Production full URL:", fullTargetUrl);
     
     try {
-      // Redirect to the agent creation loading screen with agent data
-      // First try using router.push
+      // For production, use a direct location change which is more reliable
+      if (process.env.NODE_ENV === 'production') {
+        console.log("Using direct location navigation in production");
+        window.location.href = fullTargetUrl;
+        return;
+      }
+      
+      // In development, try router.push first
       router.push(targetUrl);
       
       // As a backup, also set a timeout to do a window.location redirect if router.push doesn't work
       setTimeout(() => {
+        // Check if we're still on the current page
         if (window.location.pathname !== '/creating-agent') {
           console.log("Router navigation appears to have failed, using direct location redirect");
-          window.location.href = targetUrl;
+          window.location.href = fullTargetUrl;
         }
-      }, 500);
+      }, 300);
     } catch (error) {
       console.error("Navigation error:", error);
       // Fallback to direct location change
-      window.location.href = targetUrl;
+      window.location.href = fullTargetUrl;
     }
   }
 

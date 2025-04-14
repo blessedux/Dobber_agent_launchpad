@@ -35,8 +35,24 @@ function TransitionLinkInner({
     // If context fails, continue without transition state
   }
 
+  // Ensure href starts with a slash for correct production routing
+  const formattedHref = href.startsWith('/') ? href : `/${href}`;
+
   const handleClick = (e: React.MouseEvent) => {
-    console.log('TransitionLink clicked:', href);
+    console.log('TransitionLink clicked:', formattedHref);
+    
+    // For production environment, use direct location change if Next router fails
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      // Allow the default Link behavior to try first
+      setTimeout(() => {
+        // If we're still on the same page after a short delay, force navigation
+        if (window.location.pathname !== formattedHref.split('?')[0]) {
+          console.log('Navigation appears to have failed, redirecting manually');
+          window.location.href = formattedHref;
+        }
+      }, 100);
+    }
+    
     if (onClick) {
       onClick(e);
     }
@@ -44,7 +60,7 @@ function TransitionLinkInner({
 
   return (
     <Link
-      href={href}
+      href={formattedHref}
       className={className}
       onClick={handleClick}
       aria-disabled={isTransitioning}
@@ -68,9 +84,24 @@ export const TransitionLink: React.FC<TransitionLinkProps> = (props) => {
   } catch (error) {
     console.error('TransitionLink fallback due to error:', error);
     // Direct fallback to standard Link if the transition context breaks
+    const href = props.href.startsWith('/') ? props.href : `/${props.href}`;
+    
+    // In production, add a direct link as well
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      return (
+        <a 
+          href={href}
+          className={props.className}
+          onClick={props.onClick}
+        >
+          {props.children}
+        </a>
+      );
+    }
+    
     return (
       <Link 
-        href={props.href}
+        href={href}
         className={props.className}
         onClick={props.onClick}
         prefetch={props.prefetch}

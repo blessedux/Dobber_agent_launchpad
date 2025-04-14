@@ -700,6 +700,21 @@ export default function Dashboard() {
               Deploy Agent
             </Button>
           </TransitionLink>
+          
+          {/* Production direct link for more reliable navigation */}
+          {typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && (
+            <a 
+              href="/launch-agent" 
+              className="absolute inset-0 z-10" 
+              id="deploy-agent-production-link"
+            >
+              <Button className="bg-violet-600 hover:bg-violet-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Deploy Agent
+              </Button>
+            </a>
+          )}
+
           {/* Hidden backup link that will be shown via JS if TransitionLink fails */}
           <a 
             href="/launch-agent" 
@@ -1099,6 +1114,23 @@ export default function Dashboard() {
                         <p className="text-sm text-center text-slate-500 dark:text-slate-400 mt-2">Add to your autonomous swarm</p>
                       </div>
                     </TransitionLink>
+                    
+                    {/* Production direct link for more reliable navigation */}
+                    {typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && (
+                      <a 
+                        href="/launch-agent" 
+                        id="deploy-new-agent-production-link"
+                        className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-6 h-full flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-slate-800/70 transition-all"
+                        style={{ position: 'relative', zIndex: 10 }}
+                      >
+                        <div className="bg-violet-100 dark:bg-violet-900/40 p-3 rounded-full mb-4">
+                          <Plus className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                        </div>
+                        <h3 className="font-medium text-center">Deploy New Agent</h3>
+                        <p className="text-sm text-center text-slate-500 dark:text-slate-400 mt-2">Add to your autonomous swarm</p>
+                      </a>
+                    )}
+                    
                     {/* Backup link for Deploy New Agent */}
                     <a 
                       href="/launch-agent" 
