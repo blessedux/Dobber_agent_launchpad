@@ -43,10 +43,39 @@ export default function StepNavigation({
     console.log("Production full URL:", fullTargetUrl);
     
     try {
+      // Prevent any redirection middleware from interfering
+      // by storing a flag in session storage
+      sessionStorage.setItem('launchingAgent', 'true');
+      sessionStorage.setItem('launchTimestamp', Date.now().toString());
+      
       // For production, use a direct location change which is more reliable
       if (process.env.NODE_ENV === 'production') {
         console.log("Using direct location navigation in production");
-        window.location.href = fullTargetUrl;
+        
+        // Create a hidden form and submit it (avoids some redirection issues)
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = targetUrl;
+        form.style.display = 'none';
+        
+        // Add the parameters as hidden inputs
+        Object.entries(Object.fromEntries(new URLSearchParams(agentParams))).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        });
+        
+        // Add the form to the document and submit it
+        document.body.appendChild(form);
+        form.submit();
+        
+        // Alternative direct navigation as fallback
+        setTimeout(() => {
+          window.location.href = fullTargetUrl;
+        }, 100);
+        
         return;
       }
       

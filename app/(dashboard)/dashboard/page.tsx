@@ -100,34 +100,49 @@ export default function Dashboard() {
   useEffect(() => {
     // Check if agent was just created
     if (searchParams && searchParams.get('agentCreated') === 'true') {
-      setShowSuccess(true)
-      // Don't change the selected tab when agent is created
-      // setSelectedTab("agents") // Ensure "agents" tab is selected
+      // Check for valid completion
+      const isAgentCompleted = sessionStorage.getItem('agentCompleted');
+      const completionTimestamp = sessionStorage.getItem('completionTimestamp');
+      const now = Date.now();
       
-      // Get the agent data from URL parameters
-      const agentName = searchParams.get('name') || generateAgentName()
-      const deviceType = searchParams.get('type') || "compute-node"
-      const agentDescription = searchParams.get('desc') || ""
+      // Clear the flags
+      sessionStorage.removeItem('agentCompleted');
+      sessionStorage.removeItem('completionTimestamp');
       
-      // Create the new agent with actual data
-      const newAgent = {
-        name: agentName,
-        deviceType: deviceType as AgentDeviceType,
-        status: "online",
-        revenue: "0.00",
-        actions: 0,
-        description: agentDescription
+      // Only show success if we have a valid completion flag or legitimate params
+      if ((isAgentCompleted && completionTimestamp && 
+           now - parseInt(completionTimestamp) < 60000) ||
+          (searchParams.get('name') && searchParams.get('type'))) {
+        console.log('Valid agent creation completion detected');
+        setShowSuccess(true);
+        
+        // Get the agent data from URL parameters
+        const agentName = searchParams.get('name') || generateAgentName()
+        const deviceType = searchParams.get('type') || "compute-node"
+        const agentDescription = searchParams.get('desc') || ""
+        
+        // Create the new agent with actual data
+        const newAgent = {
+          name: agentName,
+          deviceType: deviceType as AgentDeviceType,
+          status: "online",
+          revenue: "0.00",
+          actions: 0,
+          description: agentDescription
+        }
+        
+        // Add the new agent to the list
+        setAgents(prev => [newAgent, ...prev])
+        
+        // Hide the success message after 5 seconds
+        const timer = setTimeout(() => {
+          setShowSuccess(false)
+        }, 5000)
+        
+        return () => clearTimeout(timer)
+      } else {
+        console.warn('Agent creation flag without valid completion token');
       }
-      
-      // Add the new agent to the list
-      setAgents(prev => [newAgent, ...prev])
-      
-      // Hide the success message after 5 seconds
-      const timer = setTimeout(() => {
-        setShowSuccess(false)
-      }, 5000)
-      
-      return () => clearTimeout(timer)
     }
   }, [searchParams])
 
