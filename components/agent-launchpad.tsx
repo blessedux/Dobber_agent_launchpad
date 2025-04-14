@@ -4,6 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import StepIndicator from "@/components/step-indicator"
+import AgentTypeSelection from "@/components/steps/agent-type-selection"
 import DeviceSelection from "@/components/steps/device-selection"
 import AgentDescription from "@/components/steps/agent-description"
 import OnChainLogic from "@/components/steps/on-chain-logic"
@@ -13,6 +14,7 @@ import LaunchAgent from "@/components/steps/launch-agent"
 import StepNavigation from "@/components/step-navigation"
 
 export type AgentData = {
+  agentType: string
   deviceType: string
   agentName: string
   agentDescription: string
@@ -39,6 +41,7 @@ export type AgentData = {
 }
 
 const initialAgentData: AgentData = {
+  agentType: "",
   deviceType: "",
   agentName: "",
   agentDescription: "",
@@ -68,7 +71,7 @@ export default function AgentLaunchpad() {
   const [currentStep, setCurrentStep] = useState(1)
   const [agentData, setAgentData] = useState<AgentData>(initialAgentData)
 
-  const totalSteps = 6
+  const totalSteps = 7
 
   const updateAgentData = (data: Partial<AgentData>) => {
     setAgentData((prev) => ({ ...prev, ...data }))
@@ -89,16 +92,18 @@ export default function AgentLaunchpad() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <DeviceSelection agentData={agentData} updateAgentData={updateAgentData} />
+        return <AgentTypeSelection agentData={agentData} updateAgentData={updateAgentData} />
       case 2:
-        return <AgentDescription agentData={agentData} updateAgentData={updateAgentData} />
+        return <DeviceSelection agentData={agentData} updateAgentData={updateAgentData} />
       case 3:
-        return <OnChainLogic agentData={agentData} updateAgentData={updateAgentData} />
+        return <AgentDescription agentData={agentData} updateAgentData={updateAgentData} />
       case 4:
-        return <TokenConfiguration agentData={agentData} updateAgentData={updateAgentData} />
+        return <OnChainLogic agentData={agentData} updateAgentData={updateAgentData} />
       case 5:
-        return <DeviceConnection agentData={agentData} updateAgentData={updateAgentData} />
+        return <TokenConfiguration agentData={agentData} updateAgentData={updateAgentData} />
       case 6:
+        return <DeviceConnection agentData={agentData} updateAgentData={updateAgentData} />
+      case 7:
         return <LaunchAgent agentData={agentData} />
       default:
         return null
@@ -130,12 +135,13 @@ export default function AgentLaunchpad() {
           prevStep={prevStep}
           agentData={agentData}
           isNextDisabled={
-            (currentStep === 1 && !agentData.deviceType) ||
-            (currentStep === 2 && (!agentData.agentName || !agentData.agentDescription)) ||
-            (currentStep === 3 && (!agentData.profitPoolAddress || !agentData.rewardDestination)) ||
-            (currentStep === 4 && agentData.tokenSettings.enabled && 
+            (currentStep === 1 && !agentData.agentType) ||
+            (currentStep === 2 && !agentData.deviceType) ||
+            (currentStep === 3 && (!agentData.agentName || !agentData.agentDescription)) ||
+            (currentStep === 4 && (!agentData.profitPoolAddress || !agentData.rewardDestination)) ||
+            (currentStep === 5 && agentData.tokenSettings.enabled && 
               (!agentData.tokenSettings.name || !agentData.tokenSettings.symbol)) ||
-            (currentStep === 5 && !agentData.pluginInstalled)
+            (currentStep === 6 && !agentData.pluginInstalled)
           }
         />
       </Card>

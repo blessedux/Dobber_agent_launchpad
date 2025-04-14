@@ -61,6 +61,7 @@
     "next-themes": "latest",
     "react": "^19",
     "react-chartjs-2": "^5.3.0",
+    "react-confetti": "^6.4.0",
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
     "react-hook-form": "^7.54.1",

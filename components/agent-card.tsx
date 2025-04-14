@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Cpu, Zap, Radio, Wifi, Sun, Plug, ArrowRight, AlertTriangle, Sparkles } from "lucide-react"
+import { Cpu, Zap, Radio, Wifi, Sun, Plug, ArrowRight, AlertTriangle, Sparkles, BrainCircuit, Leaf } from "lucide-react"
 
 interface AgentCardProps {
   name: string
@@ -14,11 +14,23 @@ interface AgentCardProps {
   actions: number
   alert?: string
   isNew?: boolean
+  onImprove?: () => void
+  isImproved?: boolean
 }
 
-export default function AgentCard({ name, deviceType, status, revenue, actions, alert, isNew = false }: AgentCardProps) {
+export default function AgentCard({ 
+  name, 
+  deviceType, 
+  status, 
+  revenue, 
+  actions, 
+  alert, 
+  isNew = false,
+  onImprove,
+  isImproved = false
+}: AgentCardProps) {
   return (
-    <Card className={`overflow-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70 ${isNew ? 'ring-2 ring-emerald-400 dark:ring-emerald-600' : ''}`}>
+    <Card className={`overflow-hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200/70 dark:border-slate-700/70 ${isNew ? 'ring-2 ring-emerald-400 dark:ring-emerald-600' : ''} ${isImproved ? 'ring-2 ring-emerald-400 dark:ring-emerald-600' : ''}`}>
       <div className="bg-gradient-to-br from-violet-50/95 to-slate-50/95 dark:from-slate-800/95 dark:to-violet-950/50 border-b border-slate-200/80 dark:border-slate-700/80 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
@@ -36,6 +48,7 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
             <div className="flex items-center gap-1">
               <h3 className="font-medium text-lg">{name}</h3>
               {isNew && <Sparkles className="h-4 w-4 text-amber-500 ml-1" />}
+              {isImproved && <Leaf className="h-4 w-4 text-emerald-500 ml-1" />}
             </div>
             <div className="flex items-center gap-2">
               <Badge
@@ -77,6 +90,13 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
             <p>New agent deployed and ready</p>
           </div>
         )}
+        
+        {isImproved && (
+          <div className="flex items-center gap-2 p-2 mb-3 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 text-sm rounded-md border border-emerald-200/70 dark:border-emerald-900/50">
+            <Leaf className="w-4 h-4" />
+            <p>Performance boosted with eco-tokens (+30%)</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
@@ -99,12 +119,25 @@ export default function AgentCard({ name, deviceType, status, revenue, actions, 
           </div>
         </div>
 
-        <Link href={`/agents/${name.toLowerCase()}`}>
-          <Button variant="outline" className="w-full border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-100/70 dark:hover:bg-slate-800/70">
-            <span>Manage Agent</span>
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/agents/${name.toLowerCase()}`} className="flex-1">
+            <Button variant="outline" className="w-full border-slate-200/70 dark:border-slate-700/70 hover:bg-slate-100/70 dark:hover:bg-slate-800/70">
+              <span>Manage Agent</span>
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+          
+          {onImprove && !isImproved && status !== "offline" && (
+            <Button 
+              variant="outline" 
+              className="border-emerald-200/70 dark:border-emerald-700/70 bg-emerald-50/70 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-800/50"
+              onClick={onImprove}
+            >
+              <Leaf className="w-4 h-4 mr-1" />
+              <span>Boost Performance</span>
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   )
