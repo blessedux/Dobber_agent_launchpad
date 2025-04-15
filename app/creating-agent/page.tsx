@@ -254,13 +254,40 @@ export default function CreatingAgentPage() {
   useEffect(() => {
     const isLaunchingAgent = sessionStorage.getItem('launchingAgent');
     const launchTimestamp = sessionStorage.getItem('launchTimestamp');
+    const intentionalLaunch = sessionStorage.getItem('intentionalLaunchNavigation');
+    const intentionalTimestamp = sessionStorage.getItem('launchNavigationTimestamp');
+    const launchClickSource = sessionStorage.getItem('launchClickSource');
     const now = Date.now();
     
+    // Debug logging
+    console.log('Checking navigation validity with flags:', { 
+      isLaunchingAgent, 
+      launchTimestamp, 
+      intentionalLaunch, 
+      intentionalTimestamp,
+      launchClickSource,
+      currentTime: now
+    });
+    
+    // First priority: Check if we have an intentional launch flag from our improved buttons
+    if (intentionalLaunch === 'true' && intentionalTimestamp && 
+        now - parseInt(intentionalTimestamp) < 60000) {
+      setIsValidNavigation(true);
+      console.log('Valid agent launch navigation detected via intentional flags');
+      
+      // Set the legacy flag for backward compatibility
+      sessionStorage.setItem('launchingAgent', 'true');
+      sessionStorage.setItem('launchTimestamp', now.toString());
+      
+      return;
+    }
+    
+    // Second priority: Check legacy flags
     // Check if we have a valid launch flag that's not too old (within 30 seconds)
     if (isLaunchingAgent && launchTimestamp && 
         now - parseInt(launchTimestamp) < 30000) {
       setIsValidNavigation(true);
-      console.log('Valid agent launch navigation detected');
+      console.log('Valid agent launch navigation detected via legacy flags');
     } else {
       console.warn('Navigation to creating-agent page without valid launch flag');
       // We don't redirect here yet, we'll see if there are valid query params
@@ -439,14 +466,19 @@ export default function CreatingAgentPage() {
       if (typeof window !== 'undefined') {
         logDebug('Storing agent data in session storage for redirection');
         
-        // Using a consistent set of flags across the app
-        sessionStorage.setItem('lastCreatedAgent', agentName);
-        sessionStorage.setItem('agentCompleted', 'true');
-        sessionStorage.setItem('completionTimestamp', Date.now().toString());
-        sessionStorage.setItem('redirectedFromAgentCreation', 'true');
-        sessionStorage.setItem('agentName', agentName);
-        sessionStorage.setItem('agentType', deviceType);
-        sessionStorage.setItem('agentDescription', agentDescription || '');
+        // ONLY use the new format with dashed keys, NOT the old format
+        // This prevents ambiguity and double-processing by dashboard and devices pages
+        sessionStorage.setItem('agent-created', 'true');
+        sessionStorage.setItem('agent-name', agentName);
+        sessionStorage.setItem('agent-type', deviceType);
+        sessionStorage.setItem('agent-description', agentDescription || '');
+        
+        // Clear any old format keys that might be present
+        sessionStorage.removeItem('agentCompleted');
+        sessionStorage.removeItem('completionTimestamp');
+        sessionStorage.removeItem('redirectedFromAgentCreation');
+        sessionStorage.removeItem('agentName');
+        sessionStorage.removeItem('agentType');
         
         // This is a key flag for layout protection to eventually allow redirection
         sessionStorage.setItem('intentionalCompletion', 'true');
@@ -606,7 +638,7 @@ export default function CreatingAgentPage() {
                         if (typeof window !== 'undefined') {
                           logDebug('Manual navigation button clicked');
                           window.__manualDevicesButtonClicked = true;
-                          window.__allowRedirectToDashboard = true;
+                          window.__allowRedirectToDashboard = false;
                           
                           // Store session data for the devices page
                           sessionStorage.setItem('agent-created', 'true');
@@ -614,7 +646,21 @@ export default function CreatingAgentPage() {
                           sessionStorage.setItem('agent-type', deviceType);
                           sessionStorage.setItem('agent-description', agentDescription || '');
                           
-                          // Create direct navigation
+                          // Set protection flag to protect devices page
+                          sessionStorage.setItem('protectDevicesPage', 'true');
+                          sessionStorage.setItem('lastValidLocation', '/devices');
+                          
+                          // Clear ANY old format keys that might be present to avoid ambiguity
+                          sessionStorage.removeItem('agentCompleted');
+                          sessionStorage.removeItem('completionTimestamp');
+                          sessionStorage.removeItem('redirectedFromAgentCreation');
+                          sessionStorage.removeItem('agentName');
+                          sessionStorage.removeItem('agentType');
+                          
+                          // Create direct navigation with multiple fallbacks
+                          logDebug('Creating direct navigation to devices page');
+                          
+                          // First attempt: Create and click a direct link
                           const a = document.createElement('a');
                           a.href = '/devices';
                           a.id = 'manual-navigation-link';
@@ -630,8 +676,17 @@ export default function CreatingAgentPage() {
                               if (window.location.pathname !== '/devices') {
                                 logDebug('Direct navigation failed, trying window.location');
                                 window.location.href = '/devices';
+                                
+                                // Double fallback with extra timeout
+                                setTimeout(() => {
+                                  if (window.location.pathname !== '/devices') {
+                                    logDebug('window.location failed, trying history.pushState');
+                                    window.history.pushState({}, '', '/devices');
+                                    window.location.replace('/devices');
+                                  }
+                                }, 300);
                               }
-                            }, 500);
+                            }, 300);
                           } catch (err) {
                             logDebug(`Navigation error: ${err}`);
                             window.location.href = '/devices';

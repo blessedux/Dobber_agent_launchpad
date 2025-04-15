@@ -109,31 +109,50 @@ export default function Dashboard() {
   // Check if the user has just created an agent from URL params and session storage
   useEffect(() => {
     console.log('Dashboard loaded, checking for agent creation');
-    console.log('Current URL params:', searchParams ? Object.fromEntries([...searchParams.entries()]) : 'No params');
-    console.log('Session storage flags:', {
-      agentCompleted: sessionStorage.getItem('agentCompleted'),
-      completionTimestamp: sessionStorage.getItem('completionTimestamp'),
-      redirectedFromCreation: sessionStorage.getItem('redirectedFromAgentCreation')
-    });
     
-    // Check if agent was just created
+    // IMPORTANT: Skip ALL processing if devices page protection is active
+    // This is to ensure the dashboard never interferes with the devices page
+    if (sessionStorage.getItem('protectDevicesPage') === 'true') {
+      console.log('Detected devices page protection - SKIPPING all dashboard processing');
+      return;
+    }
+    
+    // IMPORTANT: Skip ALL agent creation processing if using the new flow with dashed session keys
+    // This is to prevent dashboard from stealing redirects meant for devices page
+    if (sessionStorage.getItem('agent-created') === 'true' || 
+        sessionStorage.getItem('agent-name') ||
+        sessionStorage.getItem('agent-type')) {
+      console.log('Detected new agent creation flow with dashed keys - SKIPPING dashboard processing entirely');
+      // Immediately delete the old flags to prevent any processing
+      sessionStorage.removeItem('agentCompleted');
+      sessionStorage.removeItem('completionTimestamp');
+      sessionStorage.removeItem('redirectedFromAgentCreation');
+      sessionStorage.removeItem('agentName');
+      sessionStorage.removeItem('agentType');
+      return;
+    }
+    
+    // The code below will only run for legacy/old agent creation flow:
+    // Check if agent was just created via dashboard URL params (keeping this for backward compatibility)
     if (searchParams && searchParams.get('agentCreated') === 'true') {
-      // Check for valid completion
+      // Only process if using old keys and explicitly coming from old flow
       const isAgentCompleted = sessionStorage.getItem('agentCompleted');
       const completionTimestamp = sessionStorage.getItem('completionTimestamp');
       const redirectedFromCreation = sessionStorage.getItem('redirectedFromAgentCreation');
       const now = Date.now();
       
+      // Only continue if we have old session keys without any new ones
+      const hasOldSessionKeys = isAgentCompleted || completionTimestamp || redirectedFromCreation;
+      
+      if (!hasOldSessionKeys) {
+        console.log('No valid old session keys found - skipping dashboard processing');
+        return;
+      }
+      
       // Improved verification with multiple flags
       const hasValidQueryParams = searchParams.get('name') && searchParams.get('type');
       const hasValidTimeStamp = completionTimestamp && (now - parseInt(completionTimestamp) < 60000);
       const hasValidRedirectFlag = isAgentCompleted === 'true' || redirectedFromCreation === 'true';
-      
-      console.log('Agent creation verification:', {
-        hasValidQueryParams,
-        hasValidTimeStamp,
-        hasValidRedirectFlag
-      });
       
       // Clear the flags to prevent reuse
       sessionStorage.removeItem('agentCompleted');
@@ -148,9 +167,9 @@ export default function Dashboard() {
         window.__allowRedirectToDashboard = false;
       }
       
-      // Only show success if we have a valid completion through any verification method
-      if ((hasValidRedirectFlag && hasValidTimeStamp) || hasValidQueryParams) {
-        console.log('Valid agent creation completion detected');
+      // Only show success if we have a valid completion through any verification method and we're using the old flow
+      if (hasOldSessionKeys && ((hasValidRedirectFlag && hasValidTimeStamp) || hasValidQueryParams)) {
+        console.log('Valid agent creation completion detected for dashboard in legacy flow');
         setShowSuccess(true);
         
         // Get the agent data from URL parameters or session storage
@@ -178,7 +197,7 @@ export default function Dashboard() {
         
         return () => clearTimeout(timer)
       } else {
-        console.warn('Agent creation flag without valid completion token');
+        console.warn('Agent creation flag without valid completion token or using new flow');
       }
     }
   }, [searchParams])
@@ -759,6 +778,17 @@ export default function Dashboard() {
               href="/launch-agent" 
               className="absolute inset-0 z-10" 
               id="deploy-agent-production-link"
+              onClick={(e) => {
+                // Set up the same navigation flags as TransitionLink
+                sessionStorage.removeItem('protectDevicesPage');
+                sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+                sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+                sessionStorage.setItem('noRedirect', 'true');
+                window.__allowRedirectToDashboard = false;
+                window.__inAgentCreationFlow = true;
+                sessionStorage.setItem('launchClickSource', 'directProductionLink');
+                console.log('Direct production link clicked, setting navigation flags');
+              }}
             >
               <Button className="bg-violet-600 hover:bg-violet-700">
                 <Plus className="w-4 h-4 mr-2" />
@@ -773,7 +803,14 @@ export default function Dashboard() {
             className="hidden absolute inset-0" 
             id="deploy-agent-backup"
             onClick={(e) => {
-              console.log("Backup link clicked");
+              console.log("Backup link clicked, setting navigation flags");
+              sessionStorage.removeItem('protectDevicesPage');
+              sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+              sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+              sessionStorage.setItem('noRedirect', 'true');
+              window.__allowRedirectToDashboard = false;
+              window.__inAgentCreationFlow = true;
+              sessionStorage.setItem('launchClickSource', 'backupLink');
             }}
           >
             <Button className="bg-violet-600 hover:bg-violet-700">
@@ -786,19 +823,47 @@ export default function Dashboard() {
         {/* Add a script to ensure the button works */}
         <script dangerouslySetInnerHTML={{ __html: `
           setTimeout(() => {
-            const backupLink = document.getElementById('deploy-agent-backup');
-            const mainLink = backupLink?.previousElementSibling;
-            
-            if (backupLink && mainLink) {
-              // Test if the main link is working by checking for event listeners
-              const hasListeners = (mainLink.__proto__.hasOwnProperty('_events') && 
-                                   Object.keys(mainLink._events || {}).length > 0);
+            try {
+              const backupLink = document.getElementById('deploy-agent-backup');
+              const prodLink = document.getElementById('deploy-agent-production-link');
+              const mainLink = backupLink?.previousElementSibling;
               
-              if (!hasListeners) {
-                console.log("TransitionLink seems broken, activating backup");
-                backupLink.style.display = 'block';
-                mainLink.style.display = 'none';
+              if (backupLink && mainLink) {
+                // More reliable check for broken TransitionLink
+                const isNextLinkBroken = (
+                  !mainLink.__proto__?.hasOwnProperty('_events') || 
+                  !Object.keys(mainLink._events || {}).length || 
+                  !mainLink.getAttribute('href')
+                );
+                
+                // If Next.js Link appears broken, show our backup
+                if (isNextLinkBroken) {
+                  console.log("TransitionLink seems broken, activating backup");
+                  backupLink.style.display = 'block';
+                  // Try to hide the broken link
+                  if (mainLink) mainLink.style.display = 'none';
+                  if (prodLink) prodLink.style.display = 'none';
+                }
+                
+                // Also handle click on entire button area
+                const buttonArea = document.querySelector('.bg-violet-600.hover\\\\:bg-violet-700');
+                if (buttonArea) {
+                  buttonArea.addEventListener('click', function(e) {
+                    if (e.target !== backupLink && !backupLink.contains(e.target)) {
+                      console.log('Direct button click detected, ensuring navigation flags are set');
+                      sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+                      sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+                      sessionStorage.setItem('noRedirect', 'true');
+                      sessionStorage.setItem('launchClickSource', 'directButtonClick');
+                    }
+                  });
+                }
               }
+            } catch (err) {
+              console.error('Error in deploy agent button script:', err);
+              // If script fails, make the backup link visible as a fallback
+              const backupLink = document.getElementById('deploy-agent-backup');
+              if (backupLink) backupLink.style.display = 'block';
             }
           }, 1000);
         `}} />
@@ -1174,6 +1239,17 @@ export default function Dashboard() {
                         id="deploy-new-agent-production-link"
                         className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-6 h-full flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-slate-800/70 transition-all"
                         style={{ position: 'relative', zIndex: 10 }}
+                        onClick={(e) => {
+                          // Set up navigation flags
+                          sessionStorage.removeItem('protectDevicesPage');
+                          sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+                          sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+                          sessionStorage.setItem('noRedirect', 'true');
+                          window.__allowRedirectToDashboard = false;
+                          window.__inAgentCreationFlow = true;
+                          sessionStorage.setItem('launchClickSource', 'agentTabProductionLink');
+                          console.log('Agent tab production link clicked, setting navigation flags');
+                        }}
                       >
                         <div className="bg-violet-100 dark:bg-violet-900/40 p-3 rounded-full mb-4">
                           <Plus className="h-6 w-6 text-violet-600 dark:text-violet-400" />
@@ -1188,6 +1264,16 @@ export default function Dashboard() {
                       href="/launch-agent" 
                       className="hidden" 
                       id="deploy-new-agent-backup"
+                      onClick={(e) => {
+                        console.log("Agent tab backup link clicked, setting navigation flags");
+                        sessionStorage.removeItem('protectDevicesPage');
+                        sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+                        sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+                        sessionStorage.setItem('noRedirect', 'true');
+                        window.__allowRedirectToDashboard = false;
+                        window.__inAgentCreationFlow = true;
+                        sessionStorage.setItem('launchClickSource', 'agentTabBackupLink');
+                      }}
                     >
                       <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-6 h-full flex flex-col items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm hover:bg-white/70 dark:hover:bg-slate-800/70 transition-all">
                         <div className="bg-violet-100 dark:bg-violet-900/40 p-3 rounded-full mb-4">
@@ -1200,16 +1286,49 @@ export default function Dashboard() {
                     {/* Script to check and enable backup if needed */}
                     <script dangerouslySetInnerHTML={{ __html: `
                       setTimeout(() => {
-                        const backupLink = document.getElementById('deploy-new-agent-backup');
-                        const mainLink = backupLink?.previousElementSibling;
-                        
-                        if (backupLink && mainLink) {
-                          if (!mainLink.__proto__.hasOwnProperty('_events') || 
-                              Object.keys(mainLink._events || {}).length === 0) {
-                            console.log("Agent tab TransitionLink seems broken, activating backup");
-                            backupLink.style.display = 'block';
-                            mainLink.style.display = 'none';
+                        try {
+                          const backupLink = document.getElementById('deploy-new-agent-backup');
+                          const prodLink = document.getElementById('deploy-new-agent-production-link');
+                          const mainLink = backupLink?.previousElementSibling;
+                          
+                          if (backupLink && mainLink) {
+                            // More reliable check for broken TransitionLink
+                            const isNextLinkBroken = (
+                              !mainLink.__proto__?.hasOwnProperty('_events') || 
+                              !Object.keys(mainLink._events || {}).length || 
+                              !mainLink.getAttribute('href')
+                            );
+                            
+                            if (isNextLinkBroken) {
+                              console.log("Agent tab TransitionLink seems broken, activating backup");
+                              backupLink.style.display = 'block';
+                              if (mainLink) mainLink.style.display = 'none';
+                              if (prodLink) prodLink.style.display = 'none';
+                            }
+                            
+                            // Add click handling to the entire card
+                            const card = document.querySelector('.border-dashed.border-2');
+                            if (card) {
+                              card.addEventListener('click', function(e) {
+                                console.log('Agent card clicked, ensuring navigation flags are set');
+                                sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+                                sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+                                sessionStorage.setItem('noRedirect', 'true');
+                                sessionStorage.setItem('launchClickSource', 'agentCardClick');
+                                
+                                // If all links are broken, force navigation
+                                if (isNextLinkBroken && (!prodLink || prodLink.style.display === 'none') 
+                                    && (!backupLink || backupLink.style.display === 'none')) {
+                                  window.location.href = '/launch-agent';
+                                }
+                              });
+                            }
                           }
+                        } catch (err) {
+                          console.error('Error in agent tab deployment button script:', err);
+                          // If script fails, make the backup link visible as a fallback
+                          const backupLink = document.getElementById('deploy-new-agent-backup');
+                          if (backupLink) backupLink.style.display = 'block';
                         }
                       }, 1200);
                     `}} />

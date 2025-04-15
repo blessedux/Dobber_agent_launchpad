@@ -64,6 +64,7 @@ function TransitionLinkInner({
   useEffect(() => {
     if (isLaunchAgent && formattedHref === '/launch-agent') {
       setAllowNavigation(true);
+      console.log('Launch agent link detected, setting allowNavigation to true');
     }
   }, [isLaunchAgent, formattedHref]);
 
@@ -72,16 +73,45 @@ function TransitionLinkInner({
     if (isLaunchAgent && formattedHref === '/launch-agent') {
       console.log('Launch Agent button clicked, allowing navigation');
       
-      // Set a flag to indicate this is an intentional launch agent navigation
+      // Enhanced flags for agent launch
       if (typeof window !== 'undefined') {
+        // Clear any existing protection flags that might interfere
+        sessionStorage.removeItem('protectDevicesPage');
+        
+        // Set our launch flags
         sessionStorage.setItem('intentionalLaunchNavigation', 'true');
         sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+        sessionStorage.setItem('noRedirect', 'true');
+        
+        // Reset any global flags that might interfere
+        window.__allowRedirectToDashboard = false;
+        window.__inAgentCreationFlow = true;
+        window.__isLocationOverridden = false;
+        
+        // Set additional flags to help with debugging
+        sessionStorage.setItem('launchClickSource', 'transitionLink');
+        
+        console.log('Set all navigation flags for agent launch. Proceeding with navigation.');
       }
       
       // Don't prevent default - let it navigate normally
       if (onClick) {
         onClick(e);
       }
+      
+      // For production, perform an immediate direct navigation as a fallback
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+        // Small delay to let the router start its navigation
+        setTimeout(() => {
+          const currentPath = window.location.pathname;
+          // If we're still not on the launch-agent page after a small delay, force direct navigation
+          if (!currentPath.includes('launch-agent') && !currentPath.includes('creating-agent')) {
+            console.log('Navigation seems stuck, forcing direct navigation to', formattedHref);
+            window.location.href = formattedHref;
+          }
+        }, 300);
+      }
+      
       return;
     }
     
