@@ -24,6 +24,15 @@ import useLiveDashboardData from "@/hooks/useLiveDashboardData"
 import EcosystemAgentCard from "@/components/charts/EcosystemAgentCard"
 import { motion } from "framer-motion"
 
+// Add this at the top of the file after imports but before the component
+declare global {
+  interface Window {
+    __allowRedirectToDashboard?: boolean;
+    __inAgentCreationFlow?: boolean;
+    __isLocationOverridden?: boolean;
+  }
+}
+
 // Define types for live data
 interface DeviceTypeData {
   name: string;
@@ -97,7 +106,16 @@ export default function Dashboard() {
     error: string | null 
   };
   
+  // Check if the user has just created an agent from URL params and session storage
   useEffect(() => {
+    console.log('Dashboard loaded, checking for agent creation');
+    console.log('Current URL params:', searchParams ? Object.fromEntries([...searchParams.entries()]) : 'No params');
+    console.log('Session storage flags:', {
+      agentCompleted: sessionStorage.getItem('agentCompleted'),
+      completionTimestamp: sessionStorage.getItem('completionTimestamp'),
+      redirectedFromCreation: sessionStorage.getItem('redirectedFromAgentCreation')
+    });
+    
     // Check if agent was just created
     if (searchParams && searchParams.get('agentCreated') === 'true') {
       // Check for valid completion
@@ -121,6 +139,14 @@ export default function Dashboard() {
       sessionStorage.removeItem('agentCompleted');
       sessionStorage.removeItem('completionTimestamp');
       sessionStorage.removeItem('redirectedFromAgentCreation');
+      sessionStorage.removeItem('agentName');
+      sessionStorage.removeItem('agentType');
+      
+      // Reset any __allowRedirectToDashboard flag that might be set
+      if (typeof window !== 'undefined' && window.__allowRedirectToDashboard) {
+        console.log('Resetting __allowRedirectToDashboard flag');
+        window.__allowRedirectToDashboard = false;
+      }
       
       // Only show success if we have a valid completion through any verification method
       if ((hasValidRedirectFlag && hasValidTimeStamp) || hasValidQueryParams) {
@@ -131,10 +157,6 @@ export default function Dashboard() {
         const agentName = searchParams.get('name') || sessionStorage.getItem('agentName') || generateAgentName();
         const deviceType = searchParams.get('type') || sessionStorage.getItem('agentType') || "compute-node";
         const agentDescription = searchParams.get('desc') || "";
-        
-        // Clear the session storage agent data
-        sessionStorage.removeItem('agentName');
-        sessionStorage.removeItem('agentType');
         
         // Create the new agent with actual data
         const newAgent = {

@@ -5,6 +5,7 @@ import useAgentTokens from '@/hooks/useAgentTokens';
 import { Wallet, DollarSign, LineChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TokenCard from './TokenCard';
+import { TransitionLink } from '@/components/ui/transition-link';
 
 interface UserPortfolioProps {
   walletAddress: string;
@@ -48,9 +49,11 @@ const UserPortfolio: React.FC<UserPortfolioProps> = ({
           <p className="text-sm text-gray-500 mb-4">
             You don't own any agent tokens yet. Deploy an agent or purchase tokens to get started.
           </p>
-          <Button className="bg-violet-600 hover:bg-violet-700">
-            Deploy New Agent
-          </Button>
+          <TransitionLink href="/launch-agent" isLaunchAgent={true}>
+            <Button className="bg-violet-600 hover:bg-violet-700">
+              Deploy New Agent
+            </Button>
+          </TransitionLink>
         </div>
       </Card>
     );

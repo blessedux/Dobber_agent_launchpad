@@ -32,7 +32,7 @@ export default function Navbar() {
           <TransitionLink href="/">
             <div className="flex items-center gap-2">
               <ServerCog className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-              <span className="text-xl font-semibold tracking-tight hidden md:inline-block">DOBBER</span>
+              <span className="text-xl font-semibold tracking-tight hidden md:inline-block">DOBER</span>
             </div>
           </TransitionLink>
         </div>

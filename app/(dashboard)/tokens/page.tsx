@@ -53,12 +53,68 @@ export default function TokensPage() {
     <div className="container mx-auto py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Agent Tokens</h1>
-        <TransitionLink href="/launch-agent" isLaunchAgent={true}>
-          <Button className="bg-violet-600 hover:bg-violet-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Agent Token
-          </Button>
-        </TransitionLink>
+        
+        {/* Use a more reliable pattern for the button */}
+        <div className="relative">
+          <TransitionLink href="/launch-agent" isLaunchAgent={true}>
+            <Button className="bg-violet-600 hover:bg-violet-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Agent Token
+            </Button>
+          </TransitionLink>
+          
+          {/* Production direct link for more reliable navigation */}
+          {typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && (
+            <a 
+              href="/launch-agent" 
+              className="absolute inset-0 z-10" 
+              id="create-token-production-link"
+            >
+              <Button className="bg-violet-600 hover:bg-violet-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Agent Token
+              </Button>
+            </a>
+          )}
+
+          {/* Hidden backup link that will be shown via JS if TransitionLink fails */}
+          <a 
+            href="/launch-agent" 
+            className="hidden absolute inset-0" 
+            id="create-token-backup"
+            onClick={(e) => {
+              console.log("Token create backup link clicked");
+              // Add extra flag for launch agent page
+              sessionStorage.setItem('intentionalLaunchNavigation', 'true');
+              sessionStorage.setItem('launchNavigationTimestamp', Date.now().toString());
+            }}
+          >
+            <Button className="bg-violet-600 hover:bg-violet-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Agent Token
+            </Button>
+          </a>
+        </div>
+
+        {/* Add a script to ensure the button works */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          setTimeout(() => {
+            const backupLink = document.getElementById('create-token-backup');
+            const mainLink = backupLink?.previousElementSibling;
+            
+            if (backupLink && mainLink) {
+              // Test if the main link is working by checking for event listeners
+              const hasListeners = (mainLink.__proto__.hasOwnProperty('_events') && 
+                                   Object.keys(mainLink._events || {}).length > 0);
+              
+              if (!hasListeners) {
+                console.log("Token page TransitionLink seems broken, activating backup");
+                backupLink.style.display = 'block';
+                mainLink.style.display = 'none';
+              }
+            }
+          }, 1000);
+        `}} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

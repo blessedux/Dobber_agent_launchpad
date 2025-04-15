@@ -19,12 +19,24 @@ function TransitionHandler({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [currentPage, setCurrentPage] = useState<string>(pathname + searchParams.toString());
+  const [currentPage, setCurrentPage] = useState<string>("");
   const [previousPage, setPreviousPage] = useState<string>("");
 
+  // Set initial current page on mount with null-safe check
   useEffect(() => {
-    const newPage = pathname + searchParams.toString();
-    if (newPage !== currentPage) {
+    // Safe handling of initial pathname and searchParams
+    const initial = pathname + (searchParams ? searchParams.toString() : "");
+    setCurrentPage(initial);
+  }, []);
+
+  useEffect(() => {
+    if (!pathname) return; // Safety check
+    
+    // Handle searchParams safely
+    const paramString = searchParams ? searchParams.toString() : "";
+    const newPage = pathname + paramString;
+    
+    if (newPage !== currentPage && currentPage !== "") {
       setPreviousPage(currentPage);
       setCurrentPage(newPage);
       
@@ -46,23 +58,32 @@ function TransitionHandler({ children }: { children: React.ReactNode }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0 }}
+            initial={{ 
+              opacity: 0,
+              y: 10
+            }}
             animate={{ 
               opacity: 1,
+              y: 0,
               transition: { 
-                duration: 0.8, 
+                duration: 0.5, 
                 ease: [0.22, 1, 0.36, 1],
-                delay: 0.5, // Delay entrance to allow exit animations to complete
+                delay: 0.1, // Reduced delay for faster response
               }
             }}
             exit={{ 
               opacity: 0,
+              y: -10,
               transition: { 
-                duration: 0.5, 
+                duration: 0.3, 
                 ease: [0.22, 1, 0.36, 1],
               }
             }}
             className="page-transition-container relative z-10"
+            style={{
+              willChange: "transform, opacity",
+              backfaceVisibility: "hidden"
+            }}
           >
             {children}
           </motion.div>
